@@ -7,15 +7,19 @@ export class SessionLedger {
   constructor(path) { this.path = path; this.msgs = new Map(); this.sessions = new Map(); this.load(); }
   load() {
     if (!this.path) return;
-    try { for (const s of JSON.parse(readFileSync(this.path, 'utf8'))) this.sessions.set(s.session, s); } catch { /* arquivo novo */ }
+    try {
+      const j = JSON.parse(readFileSync(this.path, 'utf8'));
+      for (const s of Array.isArray(j) ? j : j.sessions) this.sessions.set(s.session, s);
+      for (const [id, m] of Object.entries(Array.isArray(j) ? {} : j.msgs ?? {})) this.msgs.set(id, m);
+    } catch { /* arquivo novo */ }
   }
   record({ id, sessionID, cost, tokens }) {
     if (this.msgs.has(id)) { // substitui valor anterior da mesma mensagem
       const old = this.msgs.get(id);
-      this.apply(sessionID, old, -1);
+      this.apply(old.sessionID ?? sessionID, old, -1);
     }
     const m = { cost: cost ?? 0, input: tokens.input, output: tokens.output + (tokens.reasoning ?? 0), cache_read: tokens.cache?.read ?? 0, cache_write: tokens.cache?.write ?? 0 };
-    this.msgs.set(id, m);
+    this.msgs.set(id, { ...m, sessionID });
     this.apply(sessionID, m, 1);
     this.save();
   }
@@ -26,5 +30,5 @@ export class SessionLedger {
   }
   spent(sessionID) { return this.sessions.get(sessionID)?.cost ?? 0; }
   list() { return [...this.sessions.values()]; }
-  save() { if (!this.path) return; mkdirSync(dirname(this.path), { recursive: true }); writeFileSync(this.path, JSON.stringify(this.list(), null, 1)); }
+  save() { if (!this.path) return; mkdirSync(dirname(this.path), { recursive: true }); writeFileSync(this.path, JSON.stringify({ sessions: this.list(), msgs: Object.fromEntries(this.msgs) }, null, 1)); }
 }

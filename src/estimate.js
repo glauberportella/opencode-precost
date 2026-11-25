@@ -46,7 +46,9 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
   let basis, scen;
   if (history && history.length >= 5) {
     scen = fromHistory(history);
-    basis = { kind: 'historico', sessions: history.length, note: 'P25/P50/P75 de sessoes anteriores informadas; nao ajustado ao tamanho desta tarefa' };
+    const extra = promptTokens + fileTokens; // entrada observada desta tarefa, somada uma vez como entrada nova (limite inferior do efeito do tamanho)
+    for (const s of Object.values(scen)) s.freshIn += extra;
+    basis = { kind: 'historico', sessions: history.length, note: `P25/P50/P75 de sessoes anteriores informadas, mais ~${extra} tokens de entrada observada desta tarefa somados uma vez; o historico nao depende do tamanho da tarefa alem disso` };
   } else {
     scen = {};
     for (const [name, k] of Object.entries(DEFAULT_SCENARIOS)) scen[name] = simulateCalls({ base, ...k, cacheHit });
@@ -57,21 +59,32 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     const price = priceAt(prices, model, date);
     if (!price || typeof price.input !== 'number' || typeof price.output !== 'number') return { model, error: 'sem preco na tabela (n/d, nao tratado como zero)' };
     const scenarios = {}, notes = [];
+    let lowerBound = false;
     for (const [name, u] of Object.entries(scen)) {
       const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u);
       scenarios[name] = { usd: c.usd, tokens: Array.isArray(u) ? totalsOf(u) : u };
+      if (c.longUnknown) lowerBound = true;
       if (!c.cacheKnown) notes.push('sem preco de cache na tabela: entrada em cache cobrada a preco cheio (limite superior)');
-      if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : 'contexto >200K: tabela nao traz taxa longa (desconhecido)');
+      if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : 'contexto acima do limiar: tabela nao traz taxa longa (desconhecido)');
     }
-    if (price.promo_credit) notes.push(`promocao: ${price.promo_credit}`);
+    if (price.tokenizer_note) notes.push(price.tokenizer_note);
+    if (price.cache_write_5m) notes.push(`cache write (US$${price.cache_write_5m}/1M 5min) nao modelado: pode subestimar`);
     if (price.access_note) notes.push(`acesso: ${price.access_note}`);
     if (price.cache_write) notes.push(`cache write (US$${price.cache_write}/1M a partir de ${price.cache_write_from}) nao modelado`);
     const initialUsd = costCalls(price, [{ ctx: base, cachedIn: 0, out: 0 }], threshold).usd;
-    return { model, price: { input: price.input, output: price.output, cache_read: price.cache_read ?? null }, initialContextEstUsd: initialUsd, scenarios, notes: [...new Set(notes)] };
+    const promoActive = price.promo ? { ...price.promo } : null;
+    return { model, lowerBound, promo: promoActive, price: { input: price.input, output: price.output, cache_read: price.cache_read ?? null }, initialContextEstUsd: initialUsd, scenarios, notes: [...new Set(notes)] };
   });
   return { tokenMethod: TOKEN_METHOD, initial, basis, rows, pricesHash: prices._hash ?? null };
 }
 
+// Beneficio condicional da promocao (credito), SEPARADO da cobranca bruta. Nao e previsao da fatura.
+export function promoBenefit(row) {
+  if (!row.promo?.credit_back_pct) return null;
+  const g = range(row);
+  const f = row.promo.credit_back_pct / 100;
+  return { until: row.promo.until, pct: row.promo.credit_back_pct, minUsd: g.min * f, maxUsd: g.max * f };
+}
 export function range(row) {
   const v = Object.values(row.scenarios).map((s) => s.usd).sort((a, b) => a - b);
   return { min: v[0], mid: v[Math.floor((v.length - 1) / 2)], max: v[v.length - 1] };

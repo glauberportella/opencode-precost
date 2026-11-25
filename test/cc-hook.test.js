@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -21,7 +21,7 @@ test('contrato de saida (doc): bloqueio = decision block + reason string; permis
   assert.equal(b.decision, 'block'); assert.equal(typeof b.reason, 'string');
   assert.equal(b.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
   assert.ok(b.reason.length < 10000); // limite documentado de 10.000 caracteres
-  const e2 = mkenv({ ...CFG, limitUsd: 1000 });
+  const e2 = mkenv({ ...CFG, model: 'claude-sonnet-5.5', limitUsd: 1000 });
   const ok = submit(e2, 'refatorar tudo');
   assert.equal(ok.decision, undefined); assert.match(ok.systemMessage, /ESTIMATIVA/);
 });
@@ -71,7 +71,7 @@ test('approve de outra sessao nao vale; codigo errado nao aprova', () => {
   assert.equal(submit(e, 'tarefa A', 's1').decision, 'block');
 });
 test('expiracao: aprovacao vencida nao vale', () => {
-  const e = mkenv({ ...CFG, ttlMin: 0 });
+  const e = mkenv({ ...CFG, ttlMin: 0.0001 });
   const code = codeOf(submit(e, 'tarefa A'));
   const a = submit(e, `precost approve ${code}`);
   assert.ok(a.reason); // com ttl 0 expira na hora (pendencia pode ja estar vencida)
@@ -84,20 +84,57 @@ test('revogacao: approve seguido de revoke impede o reenvio', () => {
   assert.match(submit(e, 'precost revoke all').reason, /revogada/);
   assert.equal(submit(e, 'tarefa A').decision, 'block');
 });
-test('modelo ativo desconhecido: sem gate e DIZ isso', () => {
+test('modelo ativo desconhecido COM limite: falha fechada (bloqueia e diz por que); sem limite: informativo com SEM GATE', () => {
   const e = mkenv({ limitUsd: 0.01 });
   const o = submit(e, 'qualquer');
-  assert.equal(o.decision, undefined); assert.match(o.systemMessage, /SEM GATE/);
+  assert.equal(o.decision, 'block'); assert.match(o.reason, /nao pode ser avaliado/);
+  const c = codeOf(o); submit(e, `precost approve ${c}`);
+  assert.equal(submit(e, 'qualquer').decision, undefined); // aprovacao explicita libera uma vez
+  const e2 = mkenv({ model: 'gemini-4-neon' });
+  assert.match(submit(e2, 'x').systemMessage, /SEM GATE/);
+});
+test('falha fechada: limite como string, config ilegivel, ttl invalido, modelo sem preco', () => {
+  for (const cfg of [{ model: 'gemini-4-neon', limitUsd: '0.5' }, { model: 'gemini-4-neon', limitUsd: 0.5, ttlMin: 'x' }, { model: 'gemini-4-neon', limitUsd: -1 }]) {
+    const o = submit(mkenv(cfg), 'x'); assert.equal(o.decision, 'block', JSON.stringify(cfg)); assert.match(o.reason, /invalida/);
+  }
+  const e = mkenv({}); writeFileSync(e.c, '{quebrado');
+  assert.match(submit(e, 'x').reason, /ilegivel/);
+  assert.match(submit(mkenv({ model: 'modelo-inexistente', limitUsd: 5 }), 'x').reason, /sem preco/);
+});
+test('revogar DEPOIS de aprovar remove a concessao (regressao); revogar por codigo; outro codigo nao revoga', () => {
+  const e = mkenv(CFG);
+  const c1 = codeOf(submit(e, 'tarefa A')); submit(e, `precost approve ${c1}`);
+  assert.match(submit(e, 'precost revoke deadbeef').reason, /0 pendencia/);
+  assert.equal(submit(e, 'tarefa A').decision, undefined); // controle positivo: concessao seguia valida
+  const c2 = codeOf(submit(e, 'tarefa A')); submit(e, `precost approve ${c2}`);
+  assert.match(submit(e, `precost revoke ${c2}`).reason, /1 pendencia/);
+  assert.equal(submit(e, 'tarefa A').decision, 'block');
+});
+test('arquivos @ entram no custo e no vinculo; mudar o arquivo derruba a aprovacao; fora do projeto/segredo nao e lido e exige aprovacao', () => {
+  const e = mkenv(CFG); const proj = join(e.dir, 'proj'); mkdirSync(proj);
+  writeFileSync(join(proj, 'a.txt'), 'x'.repeat(40000)); writeFileSync(join(proj, '.env'), 'SEGREDO=1');
+  const run = (prompt) => { const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 's1', prompt, cwd: proj }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' }); return JSON.parse(r.stdout); };
+  const b = run('veja @a.txt'); assert.match(b.reason, /arquivos 40000/); assert.match(b.reason, /a\.txt \(40000 bytes\)/);
+  run(`precost approve ${codeOf(b)}`);
+  writeFileSync(join(proj, 'a.txt'), 'y'.repeat(40000)); // mesmo tamanho, conteudo diferente
+  assert.equal(run('veja @a.txt').decision, 'block');
+  const ok = (() => { const c = codeOf(run('veja @a.txt')); run(`precost approve ${c}`); return run('veja @a.txt'); })();
+  assert.equal(ok.decision, undefined); // controle positivo
+  const s = run('veja @.env e @../fora.txt'); assert.match(s.reason, /NAO contado/);
+  assert.doesNotMatch(s.reason, /SEGREDO/);
 });
 test('rastreador: SessionStart.model e PostModelSwitch.to_model definem o modelo da sessao', () => {
   const e = mkenv({ limitUsd: 1000 });
   const run = (ev) => spawnSync('node', [tracker], { input: JSON.stringify(ev), env: { ...process.env, PRECOST_STATE: e.st } });
-  run({ hook_event_name: 'SessionStart', session_id: 's1', model: 'gemini-4-hydrogen' });
-  assert.match(submit(e, 'x', 's1').systemMessage, /modelo ativo: gemini-4-hydrogen/);
-  run({ hook_event_name: 'PostModelSwitch', session_id: 's1', from_model: 'gemini-4-hydrogen', to_model: 'gemini-4-neon' });
-  assert.match(submit(e, 'x', 's1').systemMessage, /modelo ativo: gemini-4-neon/);
+  run({ hook_event_name: 'SessionStart', session_id: 's1', model: 'claude-sonnet-5.5' });
+  assert.match(submit(e, 'x', 's1').systemMessage, /modelo ativo: claude-sonnet-5.5/);
+  run({ hook_event_name: 'PostModelSwitch', session_id: 's1', from_model: 'claude-sonnet-5.5', to_model: 'claude-opus-5.5' });
+  assert.match(submit(e, 'x', 's1').systemMessage, /modelo ativo: claude-opus-5.5/);
 });
-test('stdin invalido nao quebra o Claude Code (exit 0, sem saida)', () => {
-  const r = spawnSync('node', [hook], { input: 'nao-json', encoding: 'utf8' });
-  assert.equal(r.status, 0); assert.equal(r.stdout, '');
+test('stdin invalido: exit 0; sem config so avisa; com limite configurado bloqueia', () => {
+  const r = spawnSync('node', [hook], { input: 'nao-json', encoding: 'utf8', env: { ...process.env, PRECOST_CONFIG: '/nao/existe', PRECOST_STATE: '/tmp/x' } });
+  assert.equal(r.status, 0); assert.match(JSON.parse(r.stdout).systemMessage, /ilegivel/);
+  const e = mkenv(CFG);
+  const r2 = spawnSync('node', [hook], { input: 'nao-json', encoding: 'utf8', env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st } });
+  assert.equal(JSON.parse(r2.stdout).decision, 'block');
 });

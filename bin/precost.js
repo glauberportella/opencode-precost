@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { loadPrices } from '../src/pricing.js';
 import { estimate } from '../src/estimate.js';
 import { format } from '../src/format.js';
 
+if (process.argv[2] === 'last') { // ultima mensagem de bloqueio (UX quando o cliente so mostra erro generico)
+  try { console.log(readFileSync(join(process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'), 'last-block.txt'), 'utf8')); } catch { console.log('precost: sem bloqueio registrado.'); }
+  process.exit(0);
+}
 const { values } = parseArgs({ options: {
   task: { type: 'string' }, 'task-file': { type: 'string' }, file: { type: 'string', multiple: true },
   model: { type: 'string', multiple: true }, prices: { type: 'string' }, history: { type: 'string' },

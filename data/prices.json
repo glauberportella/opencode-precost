@@ -1,5 +1,5 @@
 {
- "_comment": "USD por 1M de tokens, Standard, Global, entrada <=200K. Campo ausente = desconhecido (nunca zero). Reasoning e cobrado como saida. Gemini 4: tabela nao traz faixa >200K (desconhecido). Cache write: nao modelado (so preco vigente a partir da data indicada; antes disso a pagina nao informa). Precos de Anthropic/OpenAI nao verificados: nao incluidos.",
+ "_comment": "USD por 1M de tokens, Standard/global, API de primeira parte. Campo ausente = desconhecido (nunca zero). Gemini: faixa >200K; Gemini 4 sem faixa >200K (desconhecido). Claude: 1M de contexto a preco padrao, exceto Haiku 5.5 (faixa a 100K). Cache write nao modelado (subestima um pouco). Batch, Priority, Fast mode, residencia de dados (1.1x) nao modelados. Promocao = beneficio condicional, nunca entra no preco bruto. long_context: 'none' = pagina nao lista faixa acima do limiar (preco unico); 'unknown' = tabela sem a coluna (Gemini 4): custo acima do limiar vira limite inferior e exige aprovacao.",
  "currency": "USD",
  "long_context_threshold_tokens": 200000,
  "models": {
@@ -8,21 +8,24 @@
    "output": 1.5,
    "cache_read": 0.025,
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.5-flash-lite": {
    "input": 0.3,
    "output": 2.5,
    "cache_read": 0.03,
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.5-flash": {
    "input": 1.5,
    "output": 9.0,
    "cache_read": 0.15,
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.6-flash": {
    "input": 0.75,
@@ -38,7 +41,8 @@
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.7-flash": {
    "input": 0.75,
@@ -54,7 +58,8 @@
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.8-flash": {
    "input": 0.75,
@@ -70,7 +75,8 @@
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "none"
   },
   "gemini-3.1-pro-preview": {
    "input": 2.0,
@@ -92,7 +98,8 @@
    "cache_write": 1.875,
    "cache_write_from": "2027-01-12",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "unknown"
   },
   "gemini-4-neon": {
    "input": 3.0,
@@ -102,42 +109,129 @@
    "cache_write_from": "2027-01-12",
    "access_note": "pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "long_context": "unknown"
   },
   "gemini-4-carbon": {
-   "input": 2.0,
-   "output": 10.0,
-   "cache_read": 0.1,
-   "promo_credit": "preco efetivo com creditos de 50% de volta sobre gasto liquido ate 30/nov/2026; nao e o valor da fatura",
-   "changes": [
-    {
-     "from": "2026-12-01",
-     "input": 4.0,
-     "output": 20.0,
-     "cache_read": 0.2,
-     "promo_credit": null
-    }
-   ],
    "access_note": "mesmo aviso de acesso enterprise do Neon (analise anterior)",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
-  },
-  "gemini-4-argon": {
-   "input": 2.0,
-   "output": 10.0,
-   "cache_read": 0.1,
-   "promo_credit": "preco efetivo com creditos de 50% de volta sobre gasto liquido ate 30/nov/2026; nao e o valor da fatura",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "input": 4.0,
+   "output": 20.0,
+   "cache_read": 0.2,
+   "promo": {
+    "until": "2026-11-30",
+    "credit_back_pct": 50,
+    "conditional": true,
+    "note": "pagina: preco promocional via 50% de creditos de volta sobre gasto liquido. Fatura bruta tratada como preco de lista (4/20), valor inferido do preco pos-promocao e do rodape; o credito e beneficio condicional, nao desconto na fatura"
+   },
    "changes": [
     {
      "from": "2026-12-01",
-     "input": 4.0,
-     "output": 20.0,
-     "cache_read": 0.2,
-     "promo_credit": null
+     "promo": null
     }
    ],
+   "long_context": "unknown"
+  },
+  "gemini-4-argon": {
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
-   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
+   "input": 4.0,
+   "output": 20.0,
+   "cache_read": 0.2,
+   "promo": {
+    "until": "2026-11-30",
+    "credit_back_pct": 50,
+    "conditional": true,
+    "note": "pagina: preco promocional via 50% de creditos de volta sobre gasto liquido. Fatura bruta tratada como preco de lista (4/20), valor inferido do preco pos-promocao e do rodape; o credito e beneficio condicional, nao desconto na fatura"
+   },
+   "changes": [
+    {
+     "from": "2026-12-01",
+     "promo": null
+    }
+   ],
+   "long_context": "unknown"
+  },
+  "claude-fable-5.2": {
+   "input": 8,
+   "output": 40,
+   "cache_read": 0.2,
+   "cache_write_5m": 10,
+   "cache_write_1h": 16,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "long_context": "none"
+  },
+  "claude-opus-5.5": {
+   "input": 4,
+   "output": 20,
+   "cache_read": 0.2,
+   "cache_write_5m": 5,
+   "cache_write_1h": 8,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "long_context": "none"
+  },
+  "claude-sonnet-5.5": {
+   "input": 2,
+   "output": 10,
+   "cache_read": 0.1,
+   "cache_write_5m": 2.5,
+   "cache_write_1h": 4,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "long_context": "none"
+  },
+  "claude-haiku-5.5": {
+   "input": 0.1,
+   "output": 0.5,
+   "cache_read": 0.01,
+   "cache_write_5m": 0.125,
+   "cache_write_1h": 0.2,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "long_context_threshold": 100000,
+   "long_context": {
+    "input": 0.5,
+    "output": 2.5,
+    "cache_read": 0.05
+   },
+   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima"
+  },
+  "claude-sonnet-4.6": {
+   "input": 3,
+   "output": 15,
+   "cache_read": 0.3,
+   "cache_write_5m": 3.75,
+   "cache_write_1h": 6,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "long_context": "none"
+  },
+  "claude-opus-4.5": {
+   "input": 5,
+   "output": 25,
+   "cache_read": 0.5,
+   "cache_write_5m": 6.25,
+   "cache_write_1h": 10,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "tokenizer_note": "tokenizador anterior ao 4.7",
+   "long_context": "none"
+  },
+  "claude-haiku-4.5": {
+   "input": 1,
+   "output": 5,
+   "cache_read": 0.1,
+   "cache_write_5m": 1.25,
+   "cache_write_1h": 2,
+   "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
+   "long_context": "none"
   }
  }
 }

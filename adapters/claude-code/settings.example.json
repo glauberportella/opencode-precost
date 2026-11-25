@@ -1,7 +1,44 @@
 {
   "hooks": {
-    "SessionStart": [ { "hooks": [ { "type": "command", "command": "node /CAMINHO/opencode-precost/adapters/claude-code/track-model.js" } ] } ],
-    "PostModelSwitch": [ { "hooks": [ { "type": "command", "command": "node /CAMINHO/opencode-precost/adapters/claude-code/track-model.js" } ] } ],
-    "UserPromptSubmit": [ { "hooks": [ { "type": "command", "command": "node /CAMINHO/opencode-precost/adapters/claude-code/userpromptsubmit.js", "timeout": 20, "onFailure": "continue" } ] } ]
-  }
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /CAMINHO/opencode-precost/adapters/claude-code/track-model.js"
+          }
+        ]
+      }
+    ],
+    "PostModelSwitch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /CAMINHO/opencode-precost/adapters/claude-code/track-model.js"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /CAMINHO/opencode-precost/adapters/claude-code/userpromptsubmit.js",
+            "timeout": 20,
+            "onFailure": "continue"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(~/.cache/precost/**)",
+      "Edit(~/.cache/precost/**)",
+      "Write(~/.cache/precost/**)"
+    ]
+  },
+  "_comment": "permissions.deny: reduz a chance do modelo ler/escrever o estado de aprovacao via ferramentas de arquivo; NAO testado em Claude Code real e NAO impede Bash (ver docs/CAPACIDADES.md, limite de seguranca)."
 }
