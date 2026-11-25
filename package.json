@@ -16,7 +16,8 @@
     "e2e:claude-tui": "python3 scripts/claude-tui-e2e.py",
     "e2e:opencode-ledger": "bash scripts/opencode-ledger-e2e.sh",
     "e2e:claude-plugin": "bash scripts/claude-plugin-e2e.sh",
-    "e2e:claude-plugin-failure": "bash scripts/claude-plugin-failure-e2e.sh"
+    "e2e:claude-plugin-failure": "bash scripts/claude-plugin-failure-e2e.sh",
+    "e2e:native": "node scripts/e2e-native.mjs"
   },
   "engines": {
     "node": ">=20"
