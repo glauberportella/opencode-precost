@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-// Modelo ativo do Claude Code. O evento do hook NAO traz modelo (observado na 2.1.332), entao a comprovacao vem de fontes indiretas.
-// ACEITA SEM PIOR CASO: PRECOST_MODEL (declaracao do operador, nao prova tecnica), rastreador, ultima resposta no transcript, flag --model do processo claude (Linux, /proc).
-// NAO COMPROVADAS (padroes declarados): ANTHROPIC_MODEL, "model" nos settings do Claude, config.model do precost. O usuario pode ter trocado
-// de modelo ou o Claude pode usar outro padrao. Com `trustConfiguredModel: true` no config o usuario declara que estas fontes valem.
+// Modelo ativo do Claude Code. O evento do hook NAO traz modelo (observado na 2.1.332), entao a resolucao vem de fontes indiretas.
+// Nenhuma e prova tecnica do modelo do PROXIMO prompt. PRECOST_MODEL e declaracao do operador (aceita sem pior caso; nao forca o request).
+// OBSERVADAS (rastreador, ultima resposta no transcript, flag --model do processo, Linux /proc): so valem com trustConfiguredModel:true e sem /model pendente.
+// DECLARADAS (ANTHROPIC_MODEL, "model" nos settings do Claude, config.model): idem. Sem isso o gate usa o pior caso do catalogo suportado.
 const rj = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
 
 export function modelFromProcessChain(startPid = process.ppid, depth = 8) {

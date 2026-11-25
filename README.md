@@ -1,11 +1,12 @@
 # opencode-precost (prototipo)
 
-Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes de codigo (OpenCode e Claude Code), e opcionalmente pede aprovacao explicita quando a faixa alta passa de um limite. Privado, sem chamadas pagas. Nao e pronto: ver "Limites" e `docs/CAPACIDADES.md`.
+Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes de codigo (OpenCode e Claude Code), e opcionalmente pede aprovacao explicita quando a faixa alta passa de um limite. Privado, sem chamadas pagas. Primeira release privada v0.2.0, com limites: ver `docs/INSTALACAO.md`, "Limites" e `docs/CAPACIDADES.md`.
 
 ## Instalar e testar (reproduzivel)
 ```
 npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)
-npm test          # 53 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
+npm test          # 54 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
+node bin/precost.js doctor   # verifica instalacao local (limite: nao prova que o cliente carregou o hook)
 npm run e2e:opencode          # OpenCode 1.19.6 real, sem modelo: ciclo bloqueio/approve/uso unico (npx opencode-ai@1.19.6)
 npm run e2e:opencode-ledger   # OpenCode 1.19.6 real + provedor FALSO local: evento real do assistente, semantica de tokens/custo
 npm run e2e:claude-tui        # TUI INTERATIVA real do Claude Code (pty) + servidor falso: bloqueio visivel, 0 chamadas ao modelo

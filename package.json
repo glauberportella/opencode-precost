@@ -1,6 +1,6 @@
 {
   "name": "opencode-precost",
-  "version": "0.2.0-rc3",
+  "version": "0.2.0",
   "description": "Faixa de custo antes de executar uma tarefa em agentes de codigo (OpenCode, Claude Code). Prototipo.",
   "type": "module",
   "private": true,

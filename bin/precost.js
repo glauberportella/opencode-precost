@@ -7,6 +7,12 @@ import { loadPrices } from '../src/pricing.js';
 import { estimate } from '../src/estimate.js';
 import { format } from '../src/format.js';
 
+if (process.argv[2] === 'doctor') {
+  const { doctor } = await import('../src/doctor.js'); const a = process.argv.slice(3); const cs = []; let project = process.cwd();
+  for (let i = 0; i < a.length; i++) { if (a[i] === '--claude-settings') cs.push(a[++i]); else if (a[i] === '--project') project = a[++i]; }
+  const res = doctor({ project, claudeSettings: cs }); for (const r of res) console.log(`[${r.level}] ${r.msg}`);
+  process.exit(res.some((r) => r.level === 'FALHA') ? 1 : 0);
+}
 if (process.argv[2] === 'last') { // ultima mensagem de bloqueio (UX quando o cliente so mostra erro generico)
   try { console.log((() => { const d = process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'); const fs = readdirSync(d).filter((f) => /^last-block-/.test(f)).map((f) => [f, statSync(join(d, f)).mtimeMs]).sort((a, b) => b[1] - a[1]); return fs.length ? '(ultimo bloqueio de qualquer sessao: ' + fs[0][0] + ')\n' + readFileSync(join(d, fs[0][0]), 'utf8') : (() => { throw 0; })(); })()); } catch { console.log('precost: sem bloqueio registrado.'); }
   process.exit(0);

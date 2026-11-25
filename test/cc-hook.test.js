@@ -224,3 +224,16 @@ test('troca /model no transcript depois da ultima resposta: modelo observado NAO
   const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: big, transcript_path: tp }), env: { ...process.env, PRECOST_CONFIG: e2.c, PRECOST_STATE: e2.st }, encoding: 'utf8' });
   assert.match(JSON.parse(r.stdout).reason, /NAO COMPROVADO/);
 });
+
+test('precost doctor: acha hook com onFailure block, acusa onFailure ausente e arquivo inexistente, executa o hook local, e diz o limite', () => {
+  const d = mkdtempSync(join(tmpdir(), 'doc-')); mkdirSync(join(d, '.claude'));
+  const bin = new URL('../bin/precost.js', import.meta.url).pathname; const root = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+  const run = (hooks) => { writeFileSync(join(d, '.claude', 'settings.json'), JSON.stringify({ hooks })); return spawnSync('node', [bin, 'doctor', '--project', d], { env: { ...process.env, PRECOST_CONFIG: join(d, 'c.json'), CLAUDE_CONFIG_DIR: join(d, 'nada') }, encoding: 'utf8' }); };
+  writeFileSync(join(d, 'c.json'), JSON.stringify({ model: 'claude-sonnet-5.5', limitUsd: 5 }));
+  const good = run({ UserPromptSubmit: [{ hooks: [{ type: 'command', command: `node ${root}/adapters/claude-code/userpromptsubmit.js`, onFailure: 'block' }] }] });
+  assert.equal(good.status, 0); assert.match(good.stdout, /onFailure=block/); assert.match(good.stdout, /bloqueia prompt grande/); assert.match(good.stdout, /NAO prova que o cliente carregou/);
+  const open = run({ UserPromptSubmit: [{ hooks: [{ type: 'command', command: `node ${root}/adapters/claude-code/userpromptsubmit.js` }] }] });
+  assert.equal(open.status, 1); assert.match(open.stdout, /FALHA ABERTA/);
+  const gone = run({ UserPromptSubmit: [{ hooks: [{ type: 'command', command: 'node /nao/existe/userpromptsubmit.js', onFailure: 'block' }] }] });
+  assert.equal(gone.status, 1); assert.match(gone.stdout, /ARQUIVO NAO EXISTE/);
+});

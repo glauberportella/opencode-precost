@@ -1,5 +1,7 @@
 # Primeiro uso guiado (sem gasto, Linux)
 
+> Instalação, `doctor` e escopo atual: ver `docs/INSTALACAO.md`. Este arquivo é o guia inicial da CLI; trechos marcados como simulados ou não verificados foram superados por `docs/CAPACIDADES.md` (Atualizações 6 a 8).
+
 Recorte de prova de conceito local. Nada aqui chama modelo pago. Saidas reais capturadas em `docs/exemplos/` (rodadas em 25/nov/2026, Node 22).
 
 ## Passos minimos
@@ -9,7 +11,7 @@ node --version                       # precisa de Node >= 20
 node bin/precost.js estimate "Adicionar paginacao na listagem de pedidos e escrever testes" \
   --model gemini-3.5-flash --model claude-sonnet-5.5 --model gemini-4-neon
 ```
-Sem dependencias para a CLI. Para rodar os testes: `npm ci && npm test` (53 testes). Para o teste real no OpenCode 1.19.6 sem modelo pago: `npm run e2e:opencode`.
+Sem dependencias para a CLI. Para rodar os testes: `npm ci && npm test` (54 testes). Para o teste real no OpenCode 1.19.6 sem modelo pago: `npm run e2e:opencode`.
 
 ## O que a saida mostra (docs/exemplos/compare.txt)
 - OBSERVADO: so caracteres. CONTEXTO INICIAL ESTIMADO: chars/4 + 8k de sistema (premissa).
