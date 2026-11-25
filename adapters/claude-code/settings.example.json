@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "node /CAMINHO/opencode-precost/adapters/claude-code/userpromptsubmit.js", "timeout": 20 } ] }
+    ]
+  }
+}

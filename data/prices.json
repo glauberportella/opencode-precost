@@ -1,0 +1,15 @@
+{
+  "_comment": "USD por 1M de tokens, tier Standard, ate 200K de contexto por chamada. Sem dado = campo ausente (nunca zero). Edite ou sobrescreva com --prices.",
+  "currency": "USD",
+  "models": {
+    "gemini-3.1-flash-lite": { "input": 0.25, "output": 1.50, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
+    "gemini-3.5-flash-lite": { "input": 0.30, "output": 2.50, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
+    "gemini-3.8-flash": {
+      "input": 0.75, "output": 3.75,
+      "changes": [{ "from": "2027-01-01", "input": 1.50, "output": 7.50, "note": "promocao ate 31/dez/2026 segundo a analise anterior" }],
+      "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)"
+    },
+    "gemini-4-hydrogen": { "input": 1.50, "output": 7.50, "cache_read": 0.075, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
+    "gemini-4-neon": { "input": 3.00, "output": 15.00, "cache_read": 0.15, "access_note": "pagina oficial cita 'verified enterprise customers in select regions'", "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" }
+  }
+}
