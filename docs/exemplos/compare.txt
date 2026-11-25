@@ -1,0 +1,8 @@
+Previa de custo (ESTIMATIVA)
+OBSERVADO: 60 caracteres (prompt 60 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8015 tokens = prompt ~15 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: premissas): sem historico: tres cenarios com premissas fixas, nao medidas.
+- gemini-3.5-flash: contexto inicial ~US$0.01 (estimado); tarefa US$0.14 a US$13.03 (meio US$1.28; o valor alto e P75/cenario grande, NAO e teto)
+- claude-sonnet-5.5: contexto inicial ~US$0.02 (estimado); tarefa US$0.23 a US$21.38 (meio US$2.05; o valor alto e P75/cenario grande, NAO e teto) [tokens observados x1.3 (tokenizador novo, ~30% a mais; premissa da nota oficial); conservador: toda entrada nova cobrada como cache write 5min (US$2.5/1M); economia real do cache nao creditada alem da leitura]
+- gemini-4-neon: contexto inicial ~US$0.02 (estimado); tarefa AO MENOS US$0.28 a US$25.85 (so limite inferior, taxa de contexto longo desconhecida) (meio US$2.51; o valor alto e P75/cenario grande, NAO e teto) [contexto acima do limiar: tabela nao traz taxa longa (desconhecido); acesso: pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado; cache write (US$3.75/1M a partir de 2027-01-12) nao modelado]
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.

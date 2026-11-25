@@ -1,0 +1,44 @@
+{
+ "gemini-3.5-flash": [
+  {
+   "input": 300000,
+   "output": 9000,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 14,
+   "peakCtx": 60000
+  },
+  {
+   "input": 320000,
+   "output": 9000,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 14,
+   "peakCtx": 65000
+  },
+  {
+   "input": 340000,
+   "output": 9000,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 14,
+   "peakCtx": 70000
+  },
+  {
+   "input": 360000,
+   "output": 9000,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 14,
+   "peakCtx": 75000
+  },
+  {
+   "input": 380000,
+   "output": 9000,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 14,
+   "peakCtx": 80000
+  }
+ ]
+}

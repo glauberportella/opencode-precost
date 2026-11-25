@@ -1,0 +1,7 @@
+Previa de custo (ESTIMATIVA)
+OBSERVADO: 60 caracteres (prompt 60 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8015 tokens = prompt ~15 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: mista): ver a base de cada modelo abaixo (historico so onde ha 5+ sessoes do proprio modelo e projeto).
+- gemini-3.5-flash [base: historico]: contexto inicial ~US$0.01 (estimado); tarefa US$0.56 a US$0.62 (meio US$0.59; o valor alto e P75/cenario grande, NAO e teto)
+- gemini-3.5-flash-lite [base: premissas]: contexto inicial ~US$0.0024 (estimado); tarefa US$0.03 a US$2.65 (meio US$0.27; o valor alto e P75/cenario grande, NAO e teto)
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.

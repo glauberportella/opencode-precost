@@ -1,0 +1,6 @@
+>>> precost approve 4fed127f
+block | precost: aprovado por 10 min, uso unico. Agora reenvie o prompt original sem alteracao. Para desfazer: precost revoke 4fed127f
+>>> Adicionar paginacao na listagem de pedidos e escrever testes
+permitido | cenario grande, NAO e teto) Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho. (aprovacao 4fed127f consumida)
+>>> Adicionar paginacao na listagem de pedidos e escrever testes
+block | e: precost approve 2d5bbca4 (vale 10 min, uso unico; desfaz com precost revoke 2d5bbca4). Depois reenvie o prompt sem alteracao. Isto nao limita o gasto durante a tarefa.
