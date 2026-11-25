@@ -177,7 +177,7 @@ test('hook usa historico REAL dos transcripts do projeto (5+ sessoes do modelo a
   const cur = join(dir, 'cur.jsonl'); cpSync(fx, cur);
   const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x', transcript_path: cur }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
   const m = JSON.parse(r.stdout).systemMessage;
-  assert.match(m, /modelo ativo: claude-sonnet-5\.5/); assert.match(m, /transcript \(ultima resposta\)/); assert.match(m, /base: historico/);
+  assert.match(m, /modelo ativo: claude-sonnet-5\.5/); assert.match(m, /transcript \(ultima resposta; observado/); assert.match(m, /base: historico/);
   const sem = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x' }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
   assert.match(JSON.parse(sem.stdout).systemMessage, /modelo ativo: claude-opus-5\.5/); // sem transcript: config
 });
@@ -206,4 +206,21 @@ test('modelo comprovado por PRECOST_MODEL usa o preco dele sem pior caso; confli
   const c = submit(t, big, 's1', { ANTHROPIC_MODEL: 'claude-opus-5.5' });
   assert.equal(c.decision, 'block'); assert.match(c.reason, /CONFLITO/);
   assert.equal(submit(mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30, trustConfiguredModel: 'sim' }), 'x').decision, 'block'); // config invalida: falha fechada
+});
+
+test('troca /model no transcript depois da ultima resposta: modelo observado NAO vale (mesmo com trustConfiguredModel) e o pior caso entra; sem troca e com trust, vale', () => {
+  const big = 'Refatorar tudo ' + 'x'.repeat(2000);
+  const d = mkdtempSync(join(tmpdir(), 'sw-')); const tp = join(d, 'cur.jsonl');
+  const asst = JSON.stringify({ type: 'assistant', message: { id: 'm1', model: 'claude-haiku-4.5', usage: { input_tokens: 10, output_tokens: 5 } } });
+  const sw = JSON.stringify({ type: 'user', message: { role: 'user', content: '<command-name>/model</command-name>\n<command-message>model</command-message>\n<command-args>claude-fable-5.2</command-args>' } });
+  const e = mkenv({ model: 'claude-haiku-4.5', limitUsd: 30, trustConfiguredModel: true });
+  const run = (extra) => { const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: big, transcript_path: tp }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' }); return JSON.parse(r.stdout); };
+  writeFileSync(tp, asst + '\n');
+  const a = run(); assert.equal(a.decision, undefined); assert.doesNotMatch(a.systemMessage, /NAO COMPROVADO/); // trust + observado + sem troca
+  writeFileSync(tp, asst + '\n' + sw + '\n');
+  const b = run(); assert.equal(b.decision, 'block'); assert.match(b.reason, /TROCA DE MODELO/); assert.match(b.reason, /NAO COMPROVADO/);
+  const e2 = mkenv({ model: 'claude-haiku-4.5', limitUsd: 30 }); // sem trust: observado nunca e comprovado
+  writeFileSync(tp, asst + '\n');
+  const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: big, transcript_path: tp }), env: { ...process.env, PRECOST_CONFIG: e2.c, PRECOST_STATE: e2.st }, encoding: 'utf8' });
+  assert.match(JSON.parse(r.stdout).reason, /NAO COMPROVADO/);
 });

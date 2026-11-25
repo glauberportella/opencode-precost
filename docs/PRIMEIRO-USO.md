@@ -9,7 +9,7 @@ node --version                       # precisa de Node >= 20
 node bin/precost.js estimate "Adicionar paginacao na listagem de pedidos e escrever testes" \
   --model gemini-3.5-flash --model claude-sonnet-5.5 --model gemini-4-neon
 ```
-Sem dependencias para a CLI. Para rodar os testes: `npm ci && npm test` (47 testes). Para o teste real no OpenCode 1.19.6 sem modelo pago: `npm run e2e:opencode`.
+Sem dependencias para a CLI. Para rodar os testes: `npm ci && npm test` (53 testes). Para o teste real no OpenCode 1.19.6 sem modelo pago: `npm run e2e:opencode`.
 
 ## O que a saida mostra (docs/exemplos/compare.txt)
 - OBSERVADO: so caracteres. CONTEXTO INICIAL ESTIMADO: chars/4 + 8k de sistema (premissa).

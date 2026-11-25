@@ -23,15 +23,24 @@ let ev;
 try { ev = JSON.parse(readFileSync(0, 'utf8')); } catch (e) { failure('entrada do hook ilegivel'); }
 
 // Modelo ativo: o evento NAO traz (observado na 2.1.332). Ver src/claude-model.js para fontes comprovadas e nao comprovadas.
-let model, modelSource, proven = false, declared = [];
+let model, modelSource, proven = false, observed = false, declared = [];
 if (process.env.PRECOST_MODEL) { model = process.env.PRECOST_MODEL; modelSource = 'env PRECOST_MODEL (declaracao explicita)'; proven = true; }
-if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${ev.session_id}.json`), 'utf8')).model; if (model) { modelSource = 'rastreador (SessionStart/PostModelSwitch)'; proven = true; } } catch { /* nao rastreado */ } }
-if (!model && ev.transcript_path) { const { lastModel } = await import('../../src/claude-transcript.js'); model = lastModel(ev.transcript_path) ?? undefined; if (model) { modelSource = 'transcript (ultima resposta)'; proven = true; } }
-if (!model) { const { modelFromProcessChain } = await import('../../src/claude-model.js'); model = modelFromProcessChain() ?? undefined; if (model) { modelSource = 'flag --model do processo claude'; proven = true; } }
+if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${ev.session_id}.json`), 'utf8')).model; if (model) { modelSource = 'rastreador (SessionStart/PostModelSwitch; observado, pode estar defasado)'; observed = true; } } catch { /* nao rastreado */ } }
+if (!model && ev.transcript_path) { const { lastModel } = await import('../../src/claude-transcript.js'); model = lastModel(ev.transcript_path) ?? undefined; if (model) { modelSource = 'transcript (ultima resposta; observado, nao garante a proxima apos troca de modelo)'; observed = true; } }
+if (!model) { const { modelFromProcessChain } = await import('../../src/claude-model.js'); model = modelFromProcessChain() ?? undefined; if (model) { modelSource = 'flag --model do processo claude (observado no inicio; /model pode ter trocado)'; observed = true; } }
 if (!model) {
   const { declaredModels } = await import('../../src/claude-model.js');
   declared = declaredModels({ cwd: ev.cwd, config });
   if (declared.length) { model = declared[0].model; modelSource = declared[0].source; const distinct = new Set(declared.map((x) => x.model)); proven = config.trustConfiguredModel === true && distinct.size === 1; if (distinct.size > 1) modelSource += ` (CONFLITO entre ${[...distinct].join(', ')})`; }
+}
+
+// So a declaracao explicita PRECOST_MODEL e prova. Fonte observada (tracker/transcript/flag) e a melhor evidencia, mas NAO garante o modelo da proxima resposta (troca de modelo): so conta como comprovada com trustConfiguredModel:true e sem conflito com fontes declaradas.
+if (observed) {
+  const { declaredModels } = await import('../../src/claude-model.js');
+  declared = declaredModels({ cwd: ev.cwd, config }).filter((x) => x.model !== model);
+  if (declared.length) modelSource += ` (CONFLITO com ${[...new Set(declared.map((x) => x.model))].join(', ')})`;
+  proven = config.trustConfiguredModel === true && declared.length === 0;
+  if (ev.transcript_path) { const { pendingModelSwitch } = await import('../../src/claude-transcript.js'); const sw = pendingModelSwitch(ev.transcript_path); if (sw) { proven = false; modelSource += ` (TROCA DE MODELO /model${sw.args ? ' ' + sw.args : ''} registrada no transcript depois da ultima resposta: o modelo atual pode ser outro)`; if (sw.args) declared.push({ model: sw.args, source: '/model do transcript' }); } }
 }
 
 let d;

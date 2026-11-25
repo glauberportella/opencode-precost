@@ -32,3 +32,11 @@ test('aprovacao vencida e consumida/descartada: nao ressuscita', () => {
   assert.equal(decide({ prompt: 'tarefa', model: cfg.model, session: 's', config: cfg, stateDir: st, now: T0 + 20 * 60_000 }).action, 'block');
   assert.equal(decide({ prompt: 'tarefa', model: cfg.model, session: 's', config: cfg, stateDir: st, now: T0 + 21 * 60_000 }).action, 'block');
 });
+
+test('API: historico em lista unica com varios modelos e rejeitado (sem mistura silenciosa); mapa por modelo e aceito', () => {
+  const h = [{ input: 1000, cache_read: 0, output: 500, cache_write: 0, turns: 3 }];
+  const r = decide({ prompt: 'x', model: 'gemini-4-neon', session: 's', config: { ...cfg, compare: ['gemini-4-carbon'] }, stateDir: mk(), history: h });
+  assert.equal(r.action, 'block'); assert.match(r.text, /lista unica/);
+  const ok = decide({ prompt: 'x', model: 'gemini-4-neon', session: 's', config: { ...cfg, compare: ['gemini-4-carbon'] }, stateDir: mk(), history: { 'gemini-4-neon': h } });
+  assert.doesNotMatch(ok.text ?? '', /lista unica/);
+});

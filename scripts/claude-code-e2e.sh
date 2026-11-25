@@ -25,9 +25,11 @@ CODE=$(grep -o 'precost approve [0-9a-f]\{8\}' $W/out.txt | head -1 | awk '{prin
 run "precost approve $CODE" --resume $SID; chk "2 approve nao chama modelo" "$(calls)" 0; chk "2 aprovado" "$(has x 'aprovado por')" sim
 run "$P" --resume $SID; chk "3 reenvio chama o modelo 1x" "$(calls)" 1; chk "3 resposta do modelo" "$(has x 'mock ok')" sim
 run "$P" --resume $SID; chk "4 uso unico: bloqueia de novo" "$(has x 'BLOQUEADO')" sim; chk "4 modelo nao chamado de novo" "$(calls)" 1
-chk "4 modelo agora vem do transcript (sonnet, nao o opus do config)" "$(has x 'transcript (ultima resposta)')" sim; chk "4 usa preco do sonnet" "$(has x 'modelo ativo: claude-sonnet-5.5')" sim
+chk "4 transcript e so observado: ainda nao comprovado (conflito com config opus)" "$(has x 'transcript (ultima resposta')" sim; chk "4 pior caso, nao silencia" "$(has x 'MODELO NAO COMPROVADO')" sim
 run "precost estimate corrigir um bug" --resume $SID; chk "5 estimate nao chama modelo" "$(calls)" 1; chk "5 previa" "$(has x 'Nada foi enviado ao modelo')" sim
 SID2=$(python3 -c 'import uuid;print(uuid.uuid4())')
-run "$P" --session-id $SID2 --model claude-opus-5.5; chk "6 --model do processo comprova (nao pior caso)" "$(has x 'flag --model do processo claude')" sim; chk "6 sem aviso de nao comprovado" "$(has x 'NAO COMPROVADO')" nao
+run "$P" --session-id $SID2 --model claude-opus-5.5; chk "6 --model do processo e observado (nao prova)" "$(has x 'flag --model do processo claude')" sim; chk "6 ainda nao comprovado" "$(has x 'NAO COMPROVADO')" sim
+SID3=$(python3 -c 'import uuid;print(uuid.uuid4())')
+PRECOST_MODEL=claude-opus-5.5 run "$P" --session-id $SID3; chk "7 PRECOST_MODEL comprova" "$(has x 'env PRECOST_MODEL')" sim; chk "7 sem pior caso" "$(has x 'NAO COMPROVADO')" nao
 pkill -f mock-anthropic.mjs || true
 [ $FAIL = 0 ] && echo "E2E CLAUDE CODE OK (2.1.332, servidor falso, sem gasto)" || { echo "E2E CLAUDE CODE FALHOU"; exit 1; }

@@ -44,6 +44,7 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
 
   // Cenarios por modelo: o multiplicador de tokenizador (Claude 4.7+, ~30%) so afeta os tokens observados (prompt/arquivos), nao a premissa de sistema.
   // history: lista (vale para todas as linhas) ou mapa {modelo: lista} (cada linha usa so o seu; sem mistura entre modelos comparados).
+  if (Array.isArray(history) && models.length > 1) throw new Error('history em lista unica com varios modelos: use mapa {modelo: lista}');
   const histOf = (model) => (Array.isArray(history) ? history : history?.[model]);
   const build = (mult, hist) => {
     const pT = Math.round(promptTokens * mult), fT = Math.round(fileTokens * mult);

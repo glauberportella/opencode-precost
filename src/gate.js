@@ -44,6 +44,7 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   const bad = validateConfig(config);
   if (bad) return blockCfg(bad);
   const ttl = (config.ttlMin ?? 10) * 60_000;
+  if (Array.isArray(history) && new Set([model, ...(config.compare ?? []), ...(modelProof?.candidates ?? [])].filter(Boolean)).size > 1) return blockCfg('historico em lista unica com varios modelos: use mapa {modelo: lista}; misturar historicos entre modelos nao e permitido');
 
   let m;
   if (LAST.test(prompt)) {
@@ -101,7 +102,7 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
       const worst = rows.map((r) => ({ r, v: r.lowerBound ? Infinity : range(r).max })).sort((a, b) => b.v - a.v)[0];
       const mine = maxUsd;
       maxUsd = worst.v; bindModel = `${model}|nao-comprovado:${modelProof.source}|pior:${worst.r.model}`;
-      text += `\nMODELO NAO COMPROVADO (fonte: ${modelProof.source}). O gate usa o PIOR CASO entre ${rows.length} modelos candidatos: ${worst.r.model} ${Number.isFinite(worst.v) ? 'US$' + worst.v.toFixed(2) : 'sem limite superior conhecido'}; com ${model} a faixa alta seria ${Number.isFinite(mine) ? 'US$' + mine.toFixed(2) : 'indefinida'}. Para usar o preco do modelo declarado, informe o modelo (PRECOST_MODEL ou claude --model) ou declare trustConfiguredModel:true no config.`;
+      text += `\nMODELO NAO COMPROVADO (fonte: ${modelProof.source}). O gate usa o PIOR CASO do CATALOGO suportado (modelo fora do catalogo nao e coberto e fecha o gate) entre ${rows.length} modelos candidatos: ${worst.r.model} ${Number.isFinite(worst.v) ? 'US$' + worst.v.toFixed(2) : 'sem limite superior conhecido'}; com ${model} a faixa alta seria ${Number.isFinite(mine) ? 'US$' + mine.toFixed(2) : 'indefinida'}. Para usar o preco do modelo declarado, informe o modelo (PRECOST_MODEL ou claude --model) ou declare trustConfiguredModel:true no config.`;
       if (maxUsd > limit) reason = `modelo efetivo nao comprovado e o pior caso (${worst.r.model}) passa do limite US$${limit}`;
     } else if (!active.lowerBound && maxUsd > limit) reason = `faixa alta estimada US$${maxUsd.toFixed(2)} acima do limite US$${limit} (faixa alta = P75/cenario grande, NAO e teto de gasto)`;
   }

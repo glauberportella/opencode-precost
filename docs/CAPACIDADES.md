@@ -73,6 +73,14 @@ Sem chamada paga e sem credencial real: Claude Code 2.1.332 e OpenCode 1.19.6 re
 
 ## Atualização 7 (rc2): modelo efetivo e TUI
 
-- O hook do Claude Code nao traz o modelo. Cadeia de resolucao: PRECOST_MODEL > tracker > ultima resposta no transcript > `--model` do processo claude (/proc, Linux) = COMPROVADO. ANTHROPIC_MODEL, settings.json do Claude e `config.model` = so DECLARADO.
+- O hook do Claude Code nao traz o modelo. Cadeia: PRECOST_MODEL (COMPROVADO) > tracker > ultima resposta no transcript > `--model` do processo (/proc, Linux) (OBSERVADOS, REVISTO no rc3: nao provam o modelo do proximo prompt apos `/model`) > ANTHROPIC_MODEL, settings.json, `config.model` (DECLARADOS).
 - Modelo nao comprovado: o gate usa o PIOR CASO entre todos os candidatos claude-* (e diz o modelo e o valor), nunca aprova silenciosamente o preco de outro modelo. A aprovacao fica presa a esse estado (muda a fonte/modelo, perde validade). Conflito entre fontes declaradas nunca e comprovado. `trustConfiguredModel: true` no config aceita um unico modelo declarado e consistente.
 - TUI interativa REAL do Claude Code 2.1.332 testada em pty contra servidor falso (`npm run e2e:claude-tui`, captura em docs/evidence/claude-tui-pty-capture.txt): bloqueio aparece na TUI, 0 chamadas ao modelo. Nao testado: TUI do OpenCode (toast), PostModelSwitch, subagentes, macOS/Windows (a deteccao por /proc e so Linux; fora dele cai no pior caso).
+
+## Atualização 8 (rc3)
+- Observado nunca e comprovado sozinho. `trustConfiguredModel:true` aceita um modelo observado/declarado consistente, MAS o transcript registra `/model` (entrada `<command-name>/model</command-name>`, observada no 2.1.332 em TUI real): troca depois da ultima resposta = pior caso rotulado. Cobre instalacao parcial sem PostModelSwitch/SessionStart. Limite residual com trust: troca de modelo que nao deixa rastro no transcript (nao observada).
+- Pior caso = maior preco do CATALOGO suportado; nao e teto universal, nem prova do modelo, nem cobre modelo desconhecido (esse fecha o gate).
+- onFailure: exemplo agora "block". Reproduzido com Claude Code 2.1.332 real: sem onFailure ou com "continue", hook que falha/trava deixa o prompt chegar ao modelo; com "block", 0 chamadas (crash do script, node ausente, timeout). `npm run e2e:claude-failure`, com controle negativo.
+- decide(): historico em lista unica com varios modelos e rejeitado (estimate lanca erro; gate bloqueia por config invalida); use mapa {modelo: lista}.
+- OpenCode TUI real 1.19.6 (pty): ANTES, o plugin bloqueava tudo na TUI porque `serverUrl` ali e fantasma (http://localhost:4096 sem servidor) e a versao nao era identificada (falha fechada: "versao do OpenCode nao identificada"). DEPOIS: versao lida do proprio binario (`process.execPath --version`), previa/bloqueio aparece na TUI (caixa de erro) e no log do gate. Approve/reenvio na TUI nao testado (chamaria provedor); ciclo approve foi validado por `serve` real.
+- Ainda nao verificado: PostModelSwitch em instalacao propria do usuario, subagentes/agendadas, macOS/Windows, fatura real, preco bruto Carbon/Argon.

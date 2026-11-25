@@ -17,6 +17,22 @@ export function lastModel(transcriptPath) {
   } catch { return null; }
 }
 
+// Troca de modelo (/model) registrada no transcript DEPOIS da ultima resposta do assistente (ou sem nenhuma resposta): o modelo da ultima resposta
+// nao vale mais para o proximo prompt. Observado no Claude Code 2.1.332: /model grava uma entrada com <command-name>/model</command-name> e <command-args>.
+export function pendingModelSwitch(transcriptPath) {
+  try {
+    const size = statSync(transcriptPath).size, n = Math.min(size, MAX_TAIL);
+    const fd = openSync(transcriptPath, 'r'); const buf = Buffer.alloc(n); readSync(fd, buf, 0, n, size - n); closeSync(fd);
+    const all = lines(buf.toString('utf8')); let lastA = -1;
+    all.forEach((j, i) => { if (j.type === 'assistant' && j.message?.model && !String(j.message.model).startsWith('<')) lastA = i; });
+    for (let i = lastA + 1; i < all.length; i++) {
+      const c = all[i]?.message?.content; const t = typeof c === 'string' ? c : Array.isArray(c) ? c.map((x) => x?.text ?? '').join('') : '';
+      if (t.includes('<command-name>/model</command-name>')) { const a = /<command-args>([^<]*)<\/command-args>/.exec(t); return { args: (a?.[1] ?? '').trim() }; }
+    }
+    return null;
+  } catch { return null; }
+}
+
 // Historico real do projeto (mesma pasta de transcripts) para UM modelo, excluindo a sessao atual.
 export function historyFromDir(dir, { model, prices, excludeSession }) {
   const want = resolveModel(prices, model);

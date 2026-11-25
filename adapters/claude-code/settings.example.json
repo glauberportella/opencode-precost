@@ -27,7 +27,7 @@
             "type": "command",
             "command": "node /CAMINHO/opencode-precost/adapters/claude-code/userpromptsubmit.js",
             "timeout": 20,
-            "onFailure": "continue"
+            "onFailure": "block"
           }
         ]
       }

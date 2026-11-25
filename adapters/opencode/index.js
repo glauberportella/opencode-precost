@@ -31,6 +31,9 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
     if (options.version !== undefined) return options.version;
     if (cachedVersion) return cachedVersion;
     try { const r = await fetch(new URL('/global/health', input.serverUrl)); cachedVersion = (await r.json()).version; } catch { /* nao identificada */ }
+    if (!cachedVersion) { // TUI: serverUrl e fantasma (localhost:4096 sem servidor). Fallback: perguntar ao proprio binario em execucao; se nao for o opencode, a saida nao casa e o gate falha FECHADO.
+      try { const { execFileSync } = await import('node:child_process'); const o = execFileSync(process.execPath, ['--version'], { timeout: 5000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); if (/^\d+\.\d+\.\d+/.test(o)) cachedVersion = o; } catch { /* nao identificada */ }
+    }
     return cachedVersion;
   };
   return {
