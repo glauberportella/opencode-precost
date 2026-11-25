@@ -23,7 +23,7 @@ Official client support on Windows (docs read 2026-11-25): Claude Code runs nati
 ```
 git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0              # until release 0.3.0
-npm ci && npm test                    # 63 tests
+npm ci && npm test                    # 70 tests
 ```
 
 End-to-end tests against real third-party clients and FAKE local servers (no spend; they download pinned versions through npx): `npm run e2e:native` (all systems), or the bash variants `e2e:claude-plugin`, `e2e:claude-plugin-failure`, `e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui` (Linux/macOS).

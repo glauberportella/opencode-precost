@@ -4,7 +4,7 @@
 
 Shows an **estimated** cost range *before* a task runs in a coding agent (OpenCode and Claude Code). Optionally asks for explicit approval when the high end of the range goes above a limit you set. No paid calls, no network access at run time.
 
-> Status: development version 0.3.0 (private repository, nothing published yet). Read "Limits" before relying on it. Messages printed by the tool (CLI, hook, plugin) are currently in Portuguese; see "Language" below.
+> Status: development version 0.3.0 (private repository, nothing published yet). Read "Limits" before relying on it.
 
 ## What it does
 
@@ -64,7 +64,7 @@ What was actually executed is in the matrix in [docs/INSTALLATION.md](docs/INSTA
 
 ```
 npm ci            # installs the dev dependency @opencode-ai/plugin@1.19.6 (needed by the OpenCode adapter test)
-npm test          # 63 unit tests
+npm test          # 70 unit tests (English and Portuguese output)
 npm run e2e:native            # real Claude Code 2.1.332 and OpenCode 1.19.6 vs fake servers: block, approve, single use, fail closed
 npm run e2e:claude-plugin     # Claude Code plugin cycle (bash, Linux/macOS)
 npm run e2e:claude-plugin-failure   # hook crash / missing node / timeout never reach the model (bash)
@@ -87,7 +87,9 @@ More detail: [docs/CAPABILITIES.md](docs/CAPABILITIES.md).
 
 ## Language
 
-The documentation is available in English (main) and Portuguese (Brasil). The messages printed by the tool itself are still Portuguese only; an English default with a language setting is proposed but not implemented.
+The documentation is available in English (main) and Portuguese (Brasil). The messages printed by the tool (CLI, Claude Code hook, OpenCode plugin) are in English by default. For Portuguese, set `"lang": "pt"` in the config file (or the `lang` option of the OpenCode plugin), or set the environment variable `PRECOST_LANG=pt`. The config value wins over the environment variable. Only the text changes: commands (`precost approve CODE`, `precost revoke CODE`, `precost last`, `precost estimate ...`), approval codes, config keys and the gate's behavior are the same in both languages, and the tests check both.
+
+The notes in the price table (`data/prices.json`) are in English. Code comments in `src/` and `adapters/` and the messages of the test and e2e scripts are still partly Portuguese.
 
 ## License
 

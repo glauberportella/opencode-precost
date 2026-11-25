@@ -25,7 +25,7 @@ Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.co
 ```
 git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0               # ate a release 0.3.0
-npm ci && npm test                     # 63 testes
+npm ci && npm test                     # 70 testes
 ```
 Testes reais com software de terceiros contra servidores FALSOS locais (sem gasto, baixam versões fixas via npx): `npm run e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui`.
 

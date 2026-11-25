@@ -34,7 +34,7 @@ Matriz do que foi realmente executado (CI real do GitHub + execucao local): ver 
 ## Instalar e testar (reproduzivel)
 ```
 npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)
-npm test          # 63 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
+npm test          # 70 testes (saida em ingles e em portugues); sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
 node bin/precost.js doctor   # verifica instalacao local (limite: nao prova que o cliente carregou o hook)
 npm run e2e:opencode          # OpenCode 1.19.6 real, sem modelo: ciclo bloqueio/approve/uso unico (npx opencode-ai@1.19.6)
 npm run e2e:opencode-ledger   # OpenCode 1.19.6 real + provedor FALSO local: evento real do assistente, semantica de tokens/custo
@@ -64,3 +64,7 @@ npm run e2e:claude            # Claude Code 2.1.332 REAL + servidor Anthropic FA
 ## Licenca
 
 MIT. Veja [LICENSE](LICENSE). Copyright (c) 2026 Glauber Portella.
+
+## Idioma das mensagens
+
+As mensagens da propria ferramenta (CLI, hook do Claude Code, plugin do OpenCode) saem em **ingles por padrao**. Para portugues, coloque `"lang": "pt"` no config (ou a opcao `lang` do plugin OpenCode), ou defina `PRECOST_LANG=pt`. O valor do config vence a variavel de ambiente. So o texto muda: comandos (`precost approve CODIGO`, `precost revoke`, `precost last`, `precost estimate`), codigos de aprovacao, chaves do config e o comportamento do gate sao os mesmos nos dois idiomas, e os testes cobrem os dois. As imagens da documentacao mostram a saida real em ingles.
