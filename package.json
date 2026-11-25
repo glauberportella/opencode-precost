@@ -1,6 +1,6 @@
 {
   "name": "opencode-precost",
-  "version": "0.2.0-rc1",
+  "version": "0.2.0-rc2",
   "description": "Faixa de custo antes de executar uma tarefa em agentes de codigo (OpenCode, Claude Code). Prototipo.",
   "type": "module",
   "private": true,
@@ -11,6 +11,7 @@
     "test": "node --test test/*.test.js",
     "e2e:opencode": "bash scripts/opencode-gate-e2e.sh",
     "e2e:claude": "bash scripts/claude-code-e2e.sh",
+    "e2e:claude-tui": "python3 scripts/claude-tui-e2e.py",
     "e2e:opencode-ledger": "bash scripts/opencode-ledger-e2e.sh"
   },
   "engines": {

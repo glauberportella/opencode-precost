@@ -70,3 +70,9 @@ Sem chamada paga e sem credencial real: Claude Code 2.1.332 e OpenCode 1.19.6 re
 - **Transcripts do Claude Code**: linhas `assistant` com `message.id/model/usage` (`input_tokens` exclui cache; `cache_read_input_tokens`; `cache_creation_input_tokens`). Formato lido de uma sessao real em 2.1.332, usado para modelo ativo e historico (dedup por `message.id`, maior valor). Os valores de uso vieram do servidor falso, entao a comparacao com fatura real segue pendente.
 - **Premissa de sistema medida em bytes**: corpo da requisicao do Claude Code = 48.919 bytes e do OpenCode = 32.576 bytes para prompts de poucos caracteres (docs/evidence/*requests.log). Convertidos por chars/4: ~12,2K e ~8,1K tokens. Padroes: 13K (Claude Code) e 8K (OpenCode). CLAUDE.md, MCPs e skills do usuario aumentam isso.
 - 49 testes.
+
+## Atualização 7 (rc2): modelo efetivo e TUI
+
+- O hook do Claude Code nao traz o modelo. Cadeia de resolucao: PRECOST_MODEL > tracker > ultima resposta no transcript > `--model` do processo claude (/proc, Linux) = COMPROVADO. ANTHROPIC_MODEL, settings.json do Claude e `config.model` = so DECLARADO.
+- Modelo nao comprovado: o gate usa o PIOR CASO entre todos os candidatos claude-* (e diz o modelo e o valor), nunca aprova silenciosamente o preco de outro modelo. A aprovacao fica presa a esse estado (muda a fonte/modelo, perde validade). Conflito entre fontes declaradas nunca e comprovado. `trustConfiguredModel: true` no config aceita um unico modelo declarado e consistente.
+- TUI interativa REAL do Claude Code 2.1.332 testada em pty contra servidor falso (`npm run e2e:claude-tui`, captura em docs/evidence/claude-tui-pty-capture.txt): bloqueio aparece na TUI, 0 chamadas ao modelo. Nao testado: TUI do OpenCode (toast), PostModelSwitch, subagentes, macOS/Windows (a deteccao por /proc e so Linux; fora dele cai no pior caso).

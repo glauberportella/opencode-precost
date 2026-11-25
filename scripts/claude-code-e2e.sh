@@ -15,16 +15,19 @@ echo '{"model":"claude-opus-5.5","limitUsd":5}' > $W/cfg.json   # config DIVERGE
 export PRECOST_CONFIG=$W/cfg.json PRECOST_STATE=$W/state
 SID=$(python3 -c 'import uuid;print(uuid.uuid4())'); FAIL=0; P="Refatorar o modulo inteiro de pagamentos e reescrever todos os testes"
 calls(){ [ -f $W/mock-model-calls.log ] && wc -l < $W/mock-model-calls.log || echo 0; }
-run(){ timeout 90 $CC -p "$1" --settings $W/settings.json --model claude-sonnet-5.5 "${@:2}" > $W/out.txt 2> $W/err.txt; }
+export ANTHROPIC_MODEL=claude-sonnet-5.5   # modelo efetivo do Claude; o config diverge de proposito (opus) => fontes declaradas em CONFLITO => nao comprovado
+run(){ timeout 90 $CC -p "$1" --settings $W/settings.json "${@:2}" > $W/out.txt 2> $W/err.txt; }
 chk(){ [ "$2" = "$3" ] || { echo "FALHOU ($1): esperado '$3', obtido '$2'"; FAIL=1; }; }
 has(){ grep -q "$2" $W/out.txt && echo sim || echo nao; }
 run "$P" --session-id $SID; chk "1 bloqueia" "$(has x 'BLOQUEADO')" sim; chk "1 modelo nao chamado" "$(calls)" 0
-chk "1 modelo vem do config (divergente)" "$(has x 'config.model')" sim
+chk "1 modelo nao comprovado: pior caso dito" "$(has x 'MODELO NAO COMPROVADO')" sim; chk "1 conflito de fontes dito" "$(has x 'CONFLITO')" sim
 CODE=$(grep -o 'precost approve [0-9a-f]\{8\}' $W/out.txt | head -1 | awk '{print $3}')
 run "precost approve $CODE" --resume $SID; chk "2 approve nao chama modelo" "$(calls)" 0; chk "2 aprovado" "$(has x 'aprovado por')" sim
 run "$P" --resume $SID; chk "3 reenvio chama o modelo 1x" "$(calls)" 1; chk "3 resposta do modelo" "$(has x 'mock ok')" sim
 run "$P" --resume $SID; chk "4 uso unico: bloqueia de novo" "$(has x 'BLOQUEADO')" sim; chk "4 modelo nao chamado de novo" "$(calls)" 1
 chk "4 modelo agora vem do transcript (sonnet, nao o opus do config)" "$(has x 'transcript (ultima resposta)')" sim; chk "4 usa preco do sonnet" "$(has x 'modelo ativo: claude-sonnet-5.5')" sim
 run "precost estimate corrigir um bug" --resume $SID; chk "5 estimate nao chama modelo" "$(calls)" 1; chk "5 previa" "$(has x 'Nada foi enviado ao modelo')" sim
+SID2=$(python3 -c 'import uuid;print(uuid.uuid4())')
+run "$P" --session-id $SID2 --model claude-opus-5.5; chk "6 --model do processo comprova (nao pior caso)" "$(has x 'flag --model do processo claude')" sim; chk "6 sem aviso de nao comprovado" "$(has x 'NAO COMPROVADO')" nao
 pkill -f mock-anthropic.mjs || true
 [ $FAIL = 0 ] && echo "E2E CLAUDE CODE OK (2.1.332, servidor falso, sem gasto)" || { echo "E2E CLAUDE CODE FALHOU"; exit 1; }

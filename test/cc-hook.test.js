@@ -181,3 +181,29 @@ test('hook usa historico REAL dos transcripts do projeto (5+ sessoes do modelo a
   const sem = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x' }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
   assert.match(JSON.parse(sem.stdout).systemMessage, /modelo ativo: claude-opus-5\.5/); // sem transcript: config
 });
+
+test('modelo NAO comprovado (so config/ANTHROPIC_MODEL): pior caso entre candidatos Claude, dito na saida; aprovacao presa ao estado', () => {
+  const big = 'Refatorar tudo ' + 'x'.repeat(2000);
+  const e = mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30 });
+  const b = submit(e, big);
+  assert.equal(b.decision, 'block'); assert.match(b.reason, /MODELO NAO COMPROVADO/); assert.match(b.reason, /PIOR CASO/); assert.match(b.reason, /claude-fable-5\.2/);
+  // com o modelo declarado (sonnet ~US$7 alto) caberia no limite: a diferenca e exatamente o risco de outro modelo
+  const t = mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30, trustConfiguredModel: true });
+  const ok = submit(t, big); assert.equal(ok.decision, undefined); assert.doesNotMatch(ok.systemMessage, /NAO COMPROVADO/);
+  // aprovacao do pior caso nao vale se o modelo declarado mudar
+  const c = codeOf(b); submit(e, `precost approve ${c}`);
+  writeFileSync(e.c, JSON.stringify({ model: 'claude-opus-5.5', limitUsd: 30 }));
+  assert.equal(submit(e, big).decision, 'block');
+  writeFileSync(e.c, JSON.stringify({ model: 'claude-sonnet-5.5', limitUsd: 30 }));
+  assert.equal(submit(e, big).decision, undefined); // controle positivo: aprovacao original segue valida
+});
+test('modelo comprovado por PRECOST_MODEL usa o preco dele sem pior caso; conflito entre fontes declaradas nunca e comprovado', () => {
+  const big = 'Refatorar tudo ' + 'x'.repeat(2000);
+  const e = mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30 });
+  const p = submit(e, big, 's1', { PRECOST_MODEL: 'claude-sonnet-5.5' });
+  assert.equal(p.decision, undefined); assert.match(p.systemMessage, /env PRECOST_MODEL/);
+  const t = mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30, trustConfiguredModel: true });
+  const c = submit(t, big, 's1', { ANTHROPIC_MODEL: 'claude-opus-5.5' });
+  assert.equal(c.decision, 'block'); assert.match(c.reason, /CONFLITO/);
+  assert.equal(submit(mkenv({ model: 'claude-sonnet-5.5', limitUsd: 30, trustConfiguredModel: 'sim' }), 'x').decision, 'block'); // config invalida: falha fechada
+});
