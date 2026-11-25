@@ -7,6 +7,9 @@ import { tr } from './i18n.js';
 
 // Sem fonte padrao embutida: uma URL que ainda nao existe falharia em campo. Informe --from ou PRECOST_PRICES_SOURCE.
 export const STALE_DAYS = 30;
+// Default source: the table published on the main branch of the project repository (see docs/PRICES.md).
+// It only works once the repository is public; until then the command fails with a clear message and keeps the current table.
+export const DEFAULT_PRICES_SOURCE = 'https://raw.githubusercontent.com/glauberportella/opencode-precost/main/data/prices.json';
 const NUM_FIELDS = ['input', 'output', 'cache_read', 'cache_write_5m', 'cache_write', 'tokenizer_multiplier'];
 
 export function validatePrices(t) {

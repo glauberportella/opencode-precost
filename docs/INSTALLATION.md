@@ -8,13 +8,17 @@ Nothing here calls a paid model or publishes a package. Requirements: Node >= 20
 
 What was actually executed (GitHub-hosted runners and local runs). Linux is not validation of macOS or Windows.
 
-| Client / OS | Linux | macOS | Windows |
-|---|---|---|---|
-| Unit tests (63) | OK (Node 20 and 22, real CI) | OK on Node 22 (real CI); Node 20 cancelled twice by GitHub infrastructure (inconclusive) | OK on Node 20 and 22 (real CI, windows-latest) |
-| Claude Code plugin, real 2.1.332 vs fake server | OK (real CI) | pending (see below) | pending |
-| OpenCode 1.19.6, real vs fake server | OK (real CI, shim + npm pack) | pending | pending |
+| Check (commit 21bec84, CI run #8; 70 unit tests) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
+|---|---|---|---|---|
+| Unit tests, Node 22 | OK | OK | OK | OK |
+| Unit tests, Node 20 | OK | OK (after one rerun) | not run | OK |
+| e2e-native: real Claude Code plugin and real OpenCode 1.19.6 vs fake servers | OK | OK (after one rerun) | OK | OK |
+| bash e2e scripts (same clients) | OK | NOT validated: runner not acquired twice | not yet run (leg added to CI afterwards) | not applicable (bash) |
 
-"Pending" entries are being run by the cross-platform harness `npm run e2e:native` in CI. This table is updated from the CI results only. An earlier macOS run of the bash scripts failed because they used `timeout`, which macOS does not have; this was fixed and the harness above no longer uses bash.
+Pre-i18n evidence, kept separate (commit f50909a, run #6): Windows unit 63/63 on Node 20 and 22 and Windows e2e-native OK. All macOS jobs in that run were not acquired.
+Not covered: Claude Code and OpenCode have been exercised against fake model servers only, never against a paid real model. The check that reads the `--model` flag of the claude process uses `/proc` and runs on Linux only.
+
+This table is updated from CI results only. An Intel leg for the bash scripts was added after the table was written; its result is not recorded here yet.
 
 Official client support on Windows (docs read 2026-11-25): Claude Code runs natively on Windows 10 1809+ / Server 2019+ (Git for Windows recommended; without it Claude Code uses PowerShell) - https://code.claude.com/docs/en/setup . OpenCode can run directly on Windows but its documentation recommends WSL - https://opencode.ai/docs/windows-wsl/ .
 

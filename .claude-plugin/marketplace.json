@@ -2,6 +2,6 @@
   "name": "precost-marketplace",
   "owner": { "name": "glauberportella" },
   "plugins": [
-    { "name": "precost", "source": "./", "description": "Previa de custo e aprovacao antes de cada prompt (estimativa, nao teto de gasto)." }
+    { "name": "precost", "source": "./", "description": "Cost preview and approval before each prompt (an estimate, not a spending cap)." }
   ]
 }

@@ -6,13 +6,17 @@ Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, ace
 
 ## Matriz de validacao (o que foi realmente executado)
 
-| Cliente / SO | Linux | macOS | Windows |
-|---|---|---|---|
-| Testes unitarios (63) | OK (Node 20 e 22, CI real) | OK Node 22 (CI real); Node 20 cancelado 2x por infra do GitHub (inconclusivo) | OK Node 20 e 22 (CI real, runner windows-latest) |
-| Claude Code plugin real (2.1.332, servidor falso) | OK (CI real) | 1a execucao FALHOU (script usava `timeout`, ausente no macOS; corrigido, reexecucao pendente) | NAO testado (scripts e2e sao bash) |
-| OpenCode 1.19.6 real (servidor falso) | OK (CI real, shim + npm pack) | reexecucao pendente | NAO testado |
+| Verificacao (commit 21bec84, CI run #8; 70 testes unitarios) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
+|---|---|---|---|---|
+| Testes unitarios, Node 22 | OK | OK | OK | OK |
+| Testes unitarios, Node 20 | OK | OK (apos uma reexecucao) | nao rodou | OK |
+| e2e-native: Claude Code (plugin) e OpenCode 1.19.6 reais vs servidores falsos | OK | OK (apos uma reexecucao) | OK | OK |
+| Scripts e2e em bash (mesmos clientes) | OK | NAO validado: runner nao adquirido 2x | ainda nao rodou (etapa adicionada ao CI depois) | nao se aplica (bash) |
 
-Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e os testes unitarios passam nas tres plataformas, mas o uso real do Claude Code/OpenCode no macOS e no Windows ainda nao foi provado (Windows nao tem teste ponta a ponta).
+Evidencia anterior ao i18n, separada (commit f50909a, run #6): Windows unit 63/63 em Node 20 e 22 e e2e-native OK. Todos os jobs de macOS dessa execucao nao foram adquiridos.
+Nao coberto: os clientes foram exercitados so contra servidores de modelo falsos, nunca contra um modelo real pago. A checagem da flag `--model` do processo claude usa `/proc` e roda so no Linux.
+
+Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e passam nos testes unitarios e no e2e-native nas tres plataformas (ver tabela). Faltam os scripts bash no macOS e qualquer teste com modelo real.
 
 ## Instalar por cliente
 

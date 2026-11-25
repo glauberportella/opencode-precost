@@ -1,7 +1,7 @@
 {
   "name": "precost",
   "version": "0.3.0",
-  "description": "Estimativa de faixa de custo antes de cada prompt e aprovacao explicita acima de um limite (USD). Estimativa, nao teto de gasto.",
+  "description": "Cost range estimate before each prompt and explicit approval above a USD limit. An estimate, not a spending cap.",
   "author": {
     "name": "glauberportella"
   },

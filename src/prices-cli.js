@@ -1,15 +1,15 @@
 import { loadPrices } from './pricing.js';
 import { tr, setLang } from './i18n.js';
 import { userPricesPath } from './paths.js';
-import { STALE_DAYS, validatePrices, tableDate, ageDays, diffPrices, fetchSource, writeUserPrices, resetUserPrices } from './prices-update.js';
+import { STALE_DAYS, DEFAULT_PRICES_SOURCE, validatePrices, tableDate, ageDays, diffPrices, fetchSource, writeUserPrices, resetUserPrices } from './prices-update.js';
 
 const usage = () => tr(`usage:
   precost prices                      show which table is in use, its date and age
-  precost update-prices --from HTTPS_URL|FILE [--yes] [--force]   (or PRECOST_PRICES_SOURCE)
+  precost update-prices [--from HTTPS_URL|FILE] [--yes] [--force]   (default: the table published in the project repository; or PRECOST_PRICES_SOURCE)
       without --yes: only shows the diff (nothing is written). --force: accept removals and changes > 5x.
   precost update-prices --reset       remove the user table (back to the bundled one)`, `uso:
   precost prices                      mostra qual tabela esta em uso, data e idade
-  precost update-prices --from URL_HTTPS|ARQUIVO [--yes] [--force]   (ou PRECOST_PRICES_SOURCE)
+  precost update-prices [--from URL_HTTPS|ARQUIVO] [--yes] [--force]   (padrao: a tabela publicada no repositorio do projeto; ou PRECOST_PRICES_SOURCE)
       sem --yes: so mostra o diff (nada e gravado). --force: aceita remocoes e variacoes > 5x.
   precost update-prices --reset       remove a tabela do usuario (volta para a embutida)`);
 
@@ -25,8 +25,7 @@ export async function runPricesCli(cmd, args, { out = console.log, err = console
     return 0;
   }
   if (o.reset) { out(resetUserPrices(userPricesPath()) ? tr('user table removed; the bundled one applies again.', 'tabela do usuario removida; volta a valer a embutida.') : tr('there was no user table.', 'nao havia tabela do usuario.')); return 0; }
-  const source = o.from ?? process.env.PRECOST_PRICES_SOURCE;
-  if (!source) { err(tr('precost: give the table source: --from HTTPS_URL|FILE (or set PRECOST_PRICES_SOURCE). There is no default URL: the project does not publish a table yet. Without a source the current (bundled) table stays in effect; edit data/prices.json from the official price pages or point to your own JSON.', 'precost: informe a fonte da tabela: --from URL_HTTPS|ARQUIVO (ou defina PRECOST_PRICES_SOURCE). Nao ha URL padrao: o projeto ainda nao publica uma tabela. Sem fonte, a tabela atual (embutida) continua valendo; edite data/prices.json a partir das paginas oficiais de preco ou aponte para um JSON seu.')); return 1; }
+  const source = o.from || process.env.PRECOST_PRICES_SOURCE || DEFAULT_PRICES_SOURCE;
   let got; try { got = await fetchSource(source); } catch (e) { err(tr(`precost: could not get ${source}: ${e.message}. Current table kept.`, `precost: nao consegui obter ${source}: ${e.message}. Tabela atual mantida.`)); return 1; }
   const bad = validatePrices(got.table); if (bad) { err(tr(`precost: table rejected (${bad}). Current table kept.`, `precost: tabela recusada (${bad}). Tabela atual mantida.`)); return 1; }
   const nd = tableDate(got.table), cd = tableDate(cur);

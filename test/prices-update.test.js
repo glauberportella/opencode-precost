@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { validatePrices, diffPrices, tableDate, fetchSource } from '../src/prices-update.js';
 import { stateDir, configPath, ledgerPath, userPricesPath, safeId } from '../src/paths.js';
@@ -68,8 +68,18 @@ test('caminhos por plataforma: Windows usa APPDATA/LOCALAPPDATA; Linux/macOS man
   assert.equal(stateDir({ PRECOST_STATE: 'X' }, 'win32'), 'X'); assert.match(userPricesPath({}, 'linux'), /precost.prices\.json$/);
   assert.equal(safeId('a:b/c*d'), 'a_b_c_d');
 });
-test('update-prices sem fonte falha com orientacao e nao altera nada', () => {
+test('update-prices com fonte remota 404 falha com mensagem clara, exit 1 e nao altera nada', async () => {
   const { env } = sandbox();
-  const r = cli(['update-prices'], { ...env, PRECOST_PRICES_SOURCE: '' });
-  assert.equal(r.status, 1); assert.match(r.stderr, /informe a fonte/); assert.equal(existsSync(userPricesPath(env)), false);
+  const srv = createServer((q, r) => { r.statusCode = 404; r.end('not found'); });
+  await new Promise((ok) => srv.listen(0, '127.0.0.1', ok));
+  try {
+    const r = await new Promise((ok) => { const c = spawn(process.execPath, [fileURLToPath(new URL('../bin/precost.js', import.meta.url)), 'update-prices'], { env: { ...process.env, ...env, PRECOST_LANG: 'pt', PRECOST_PRICES_SOURCE: `http://127.0.0.1:${srv.address().port}/prices.json` } }); let e = ''; c.stderr.on('data', (d) => { e += d; }); c.on('close', (code) => ok({ status: code, stderr: e })); });
+    assert.equal(r.status, 1); assert.match(r.stderr, /HTTP 404/); assert.match(r.stderr, /Tabela atual mantida/); assert.equal(existsSync(userPricesPath(env)), false);
+  } finally { srv.close(); }
+});
+
+test('default source is the raw data/prices.json on main of the project repository and is used without --from', async () => {
+  const { DEFAULT_PRICES_SOURCE } = await import('../src/prices-update.js');
+  assert.match(DEFAULT_PRICES_SOURCE, /^https:\/\/raw\.githubusercontent\.com\/glauberportella\/opencode-precost\/main\/data\/prices\.json$/);
+  assert.match(readFileSync(fileURLToPath(new URL('../src/prices-cli.js', import.meta.url)), 'utf8'), /\|\| DEFAULT_PRICES_SOURCE/);
 });

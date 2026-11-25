@@ -118,11 +118,11 @@ test('OpenCode plugin: English by default and lang option, tool description in E
 
 test('CLI: English default for prices/update-prices/estimate/doctor, Portuguese with PRECOST_LANG=pt, same exit codes', () => {
   const d = mkdtempSync(join(tmpdir(), 'i18n-cli-'));
-  const env = (lang) => { const e = { ...process.env, PRECOST_CONFIG: join(d, 'cfg', 'config.json'), PRECOST_PRICES: join(d, 'p.json'), PRECOST_STATE: join(d, 'st'), HOME: d, USERPROFILE: d, XDG_CONFIG_HOME: join(d, 'xdg'), APPDATA: join(d, 'appdata'), LOCALAPPDATA: join(d, 'local') }; delete e.PRECOST_LANG; if (lang) e.PRECOST_LANG = lang; return e; };
+  const env = (lang) => { const e = { ...process.env, PRECOST_PRICES_SOURCE: join(d, 'nonexistent.json'), PRECOST_CONFIG: join(d, 'cfg', 'config.json'), PRECOST_PRICES: join(d, 'p.json'), PRECOST_STATE: join(d, 'st'), HOME: d, USERPROFILE: d, XDG_CONFIG_HOME: join(d, 'xdg'), APPDATA: join(d, 'appdata'), LOCALAPPDATA: join(d, 'local') }; delete e.PRECOST_LANG; if (lang) e.PRECOST_LANG = lang; return e; };
   const run = (args, lang) => spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8', env: env(lang) });
   for (const [args, enRe, ptRe] of [
     [['prices'], /table in use: bundled/, /tabela em uso: bundled/],
-    [['update-prices'], /give the table source/, /informe a fonte da tabela/],
+    [['update-prices'], /could not get .*nonexistent/, /nao consegui obter .*nonexistent/],
     [['estimate', 'fix the login bug', '--model', 'claude-sonnet-5.5'], /Cost preview \(ESTIMATE\)/, /Previa de custo \(ESTIMATIVA\)/],
     [['last'], /no block recorded/, /sem bloqueio registrado/],
   ]) {

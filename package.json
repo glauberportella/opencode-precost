@@ -1,7 +1,7 @@
 {
   "name": "opencode-precost",
   "version": "0.3.0",
-  "description": "Faixa de custo antes de executar uma tarefa em agentes de codigo (OpenCode, Claude Code). Prototipo.",
+  "description": "Cost range preview and approval gate before a task runs in coding agents (OpenCode, Claude Code). An estimate, not a spending cap.",
   "type": "module",
   "private": true,
   "bin": {
