@@ -6,7 +6,7 @@ Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, ace
 
 ## Matriz de validacao (o que foi realmente executado)
 
-| Verificacao (commit 21bec84, CI run #8; 70 testes unitarios) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
+| Verificacao (CI run #8 no 21bec84: 70 testes unitarios; run #9 no 6e57c76: 71) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
 |---|---|---|---|---|
 | Testes unitarios, Node 22 | OK | OK | OK | OK |
 | Testes unitarios, Node 20 | OK | OK (apos uma reexecucao) | nao rodou | OK |
@@ -16,11 +16,11 @@ Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, ace
 Evidencia anterior ao i18n, separada (commit f50909a, run #6): Windows unit 63/63 em Node 20 e 22 e e2e-native OK. Todos os jobs de macOS dessa execucao nao foram adquiridos.
 Nao coberto: os clientes foram exercitados so contra servidores de modelo falsos, nunca contra um modelo real pago. A checagem da flag `--model` do processo claude usa `/proc` e roda so no Linux.
 
-Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e passam nos testes unitarios e no e2e-native nas tres plataformas (ver tabela). Falta qualquer teste com modelo real. Run #9 (commit 6e57c76, so docs e CI; codigo igual ao 21bec84) passou em todos os 14 jobs.
+Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e passam nos testes unitarios e no e2e-native nas tres plataformas (ver tabela). Falta qualquer teste com modelo real. Run #9 (commit 6e57c76, so docs e CI; codigo igual ao 21bec84) passou em todos os 14 jobs (os 7 jobs unitarios com 71/71).
 
 ## Instalar por cliente
 
-- **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; depois de publicado, `/plugin marketplace add <repo>` e `/plugin install precost`. Hooks em `hooks/hooks.json` (fail-closed). Plugin ainda NAO publicado em nenhum marketplace.
+- **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; depois de publicado, `/plugin marketplace add <repo>` e `/plugin install precost@precost-marketplace`. Hooks em `hooks/hooks.json` (fail-closed). Plugin ainda NAO publicado em nenhum marketplace.
 - **Claude Code (manual):** secao 3 abaixo (settings.json).
 - **OpenCode:** `npm i opencode-precost @opencode-ai/plugin@1.19.6` no projeto (pacote ainda nao publicado: use `npm pack` do clone) e o arquivo `.opencode/plugins/precost.js` da secao 4 importando `'opencode-precost'`. So a versao 1.19.6 e aceita; o carregamento apenas por `opencode.json` nao foi verificado.
 - **Primeiro passo em qualquer cliente:** `precost doctor` e depois a tabela de precos: `precost prices` e `precost update-prices --from URL|ARQUIVO` (nao ha URL padrao; sem fonte ele explica como fornecer uma).

@@ -8,7 +8,7 @@ Nothing here calls a paid model or publishes a package. Requirements: Node >= 20
 
 What was actually executed (GitHub-hosted runners and local runs). Linux is not validation of macOS or Windows.
 
-| Check (commit 21bec84, CI run #8; 70 unit tests) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
+| Check (CI run #8 at 21bec84: 70 unit tests; run #9 at 6e57c76: 71) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
 |---|---|---|---|---|
 | Unit tests, Node 22 | OK | OK | OK | OK |
 | Unit tests, Node 20 | OK | OK (after one rerun) | not run | OK |
@@ -18,7 +18,7 @@ What was actually executed (GitHub-hosted runners and local runs). Linux is not 
 Pre-i18n evidence, kept separate (commit f50909a, run #6): Windows unit 63/63 on Node 20 and 22 and Windows e2e-native OK. All macOS jobs in that run were not acquired.
 Not covered: Claude Code and OpenCode have been exercised against fake model servers only, never against a paid real model. The check that reads the `--model` flag of the claude process uses `/proc` and runs on Linux only.
 
-This table is updated from CI results only. Run #9 (commit 6e57c76, docs and CI only, code unchanged from 21bec84) was green in all 14 jobs, including the bash e2e on macOS arm64 and Intel.
+This table is updated from CI results only. Run #9 (commit 6e57c76, docs and CI only, code unchanged from 21bec84) was green in all 14 jobs (all 7 unit jobs 71/71), including the bash e2e on macOS arm64 and Intel.
 
 Official client support on Windows (docs read 2026-11-25): Claude Code runs natively on Windows 10 1809+ / Server 2019+ (Git for Windows recommended; without it Claude Code uses PowerShell) - https://code.claude.com/docs/en/setup . OpenCode can run directly on Windows but its documentation recommends WSL - https://opencode.ai/docs/windows-wsl/ .
 
@@ -42,7 +42,7 @@ Without `limitUsd` the hook only informs and never blocks. `trustConfiguredModel
 
 ## 3. Claude Code (tested with 2.1.332)
 
-- **Plugin:** `claude --plugin-dir /path/to/opencode-precost` to try it. After the repository is public: `/plugin marketplace add <repo>` and `/plugin install precost`. Hooks are in `hooks/hooks.json` with `onFailure: "block"`. Not published to any marketplace yet.
+- **Plugin:** `claude --plugin-dir /path/to/opencode-precost` to try it. After the repository is public: `/plugin marketplace add <repo>` and `/plugin install precost@precost-marketplace`. Hooks are in `hooks/hooks.json` with `onFailure: "block"`. Not published to any marketplace yet.
 - **Manual:** copy `adapters/claude-code/settings.example.json` into `~/.claude/settings.json` (or the project's `.claude/settings.json`) and replace `/CAMINHO/opencode-precost` with the clone path. Keep `"onFailure": "block"` on `UserPromptSubmit`; without it a crash, timeout or missing node lets the prompt reach the model.
 
 ## 4. OpenCode (tested with 1.19.6; other versions block)

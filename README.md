@@ -28,7 +28,7 @@ Image 05 illustrates the block (a model with no price in the table) as a partial
 
 Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
-- **Claude Code (plugin):** `claude --plugin-dir /path/to/opencode-precost` to try it locally. Marketplace install (`/plugin marketplace add <repo>`, `/plugin install precost`) will work only after the repository is public. Not published to any marketplace yet.
+- **Claude Code (plugin):** `claude --plugin-dir /path/to/opencode-precost` to try it locally. Marketplace install (`/plugin marketplace add <repo>`, `/plugin install precost@precost-marketplace`) will work only after the repository is public. Not published to any marketplace yet.
 - **Claude Code (manual):** copy `adapters/claude-code/settings.example.json` into your Claude settings and fix the path. Keep `"onFailure": "block"`: without it a crashing, missing or hanging hook lets the prompt reach the model.
 - **OpenCode (1.19.6 only):** `npm i opencode-precost @opencode-ai/plugin@1.19.6` (the package is not on npm yet; use `npm pack` from a clone) and create `.opencode/plugins/precost.js`:
   ```js

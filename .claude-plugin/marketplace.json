@@ -1,5 +1,6 @@
 {
   "name": "precost-marketplace",
+  "description": "Cost range preview and approval gate for Claude Code prompts.",
   "owner": { "name": "glauberportella" },
   "plugins": [
     { "name": "precost", "source": "./", "description": "Cost preview and approval before each prompt (an estimate, not a spending cap)." }
