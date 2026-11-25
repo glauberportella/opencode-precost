@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 
 const cli = fileURLToPath(new URL('../bin/precost.js', import.meta.url));
 const sess = (n) => Array.from({ length: 5 }, () => ({ input: n, output: 100, cache_read: 0, turns: 5, peakCtx: 50_000 }));

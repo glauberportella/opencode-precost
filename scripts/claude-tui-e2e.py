@@ -28,6 +28,6 @@ for ch in b'Refatorar o modulo inteiro de pagamentos e reescrever todos os teste
 pump(1); os.write(fd,b'\r'); pump(10)
 txt=re.sub(rb'\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07',b'',buf).decode('utf8','replace')
 open(W+'/tui-out.txt','w').write(txt)
-print('BLOQUEADO' in txt, 'MODELO NAO COMPROVADO' in txt, 'blocked by hook' in txt)
+print('BLOCKED' in txt, 'MODEL NOT PROVEN' in txt, 'blocked by hook' in txt)
 calls=W+'/mock-model-calls.log'; print('calls',open(calls).read().count('\n') if os.path.exists(calls) else 0)
 os.kill(pid,signal.SIGKILL); os.system('pkill -f mock-anthropic.mjs')

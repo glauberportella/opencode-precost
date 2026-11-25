@@ -4,7 +4,7 @@
 //  - tool.execute.before: com sessionLimitUsd, LANCA erro quando o gasto real da sessao passa do limite (bloqueio real de ferramenta).
 //  - chat.message: com limitUsd, bloqueia o prompt (throw) e exige 'precost approve CODIGO'; sem limitUsd so registra a previa.
 import { tool } from '@opencode-ai/plugin';
-import { ledgerPath } from '../../src/paths.js';
+import { ledgerPath, stateDir } from '../../src/paths.js';
 import { join } from 'node:path';
 import { loadPrices } from '../../src/pricing.js';
 import { estimate } from '../../src/estimate.js';
@@ -12,11 +12,13 @@ import { format } from '../../src/format.js';
 import { SessionLedger } from '../../src/history.js';
 import { decide, validateConfig, isCommand } from '../../src/gate.js';
 import { filesFromParts } from '../../src/context.js';
+import { tr, setLang } from '../../src/i18n.js';
 
 export const PINNED_OPENCODE = '1.19.6';
 
 export const PrecostPlugin = async (input = {}, options = {}) => {
   const client = input.client;
+  setLang(options.lang);
   const prices = loadPrices(options.prices);
   const models = options.models ?? Object.keys(prices.models);
   const ledger = new SessionLedger(options.historyPath ?? ledgerPath());
@@ -39,8 +41,8 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
   return {
     tool: {
       precost_estimate: tool({
-        description: 'Estima a faixa de custo (USD) de uma tarefa antes de executa-la. Separa contexto conhecido de faixa estimada.',
-        args: { task: tool.schema.string().describe('descricao da tarefa a estimar') },
+        description: 'Estimates the cost range (USD) of a task before running it. Separates known context from the estimated range.',
+        args: { task: tool.schema.string().describe('description of the task to estimate') },
         async execute(args) { return run(args.task); },
       }),
     },
@@ -60,34 +62,34 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
       try {
         const root0 = input.directory ?? process.cwd();
         if (isCommand(text)) { // comandos do usuario: SEMPRE interceptados (nunca chegam ao modelo), com ou sem limite
-          const c = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
+          const c = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare, lang: options.lang }, stateDir: options.stateDir ?? stateDir(), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
           return await deny(c.text);
         }
         if (!gated) { if (text && options.log) options.log(run(text)); return; }
         const bad = validateConfig(options);
-        if (bad) return await deny(`precost: configuracao invalida (${bad}). Bloqueado (falha fechada).`);
+        if (bad) return await deny(tr(`precost: invalid configuration (${bad}). Blocked (fail closed).`, `precost: configuracao invalida (${bad}). Bloqueado (falha fechada).`));
         if (!options.allowUnverifiedVersion) {
           const v = await version(inp);
-          if (v !== PINNED_OPENCODE) return await deny(`precost: versao do OpenCode ${v ?? 'nao identificada'} difere da verificada (${PINNED_OPENCODE}); o bloqueio por throw e comportamento nao documentado. Bloqueado (falha fechada). Valide com npm run e2e:opencode e use allowUnverifiedVersion:true por sua conta.`);
+          if (v !== PINNED_OPENCODE) return await deny(tr(`precost: OpenCode version ${v ?? 'not identified'} differs from the verified one (${PINNED_OPENCODE}); blocking by throw is undocumented behavior. Blocked (fail closed). Validate with npm run e2e:opencode and set allowUnverifiedVersion:true at your own risk.`, `precost: versao do OpenCode ${v ?? 'nao identificada'} difere da verificada (${PINNED_OPENCODE}); o bloqueio por throw e comportamento nao documentado. Bloqueado (falha fechada). Valide com npm run e2e:opencode e use allowUnverifiedVersion:true por sua conta.`));
         }
         const root = root0;
         const fileParts = filesFromParts(output.parts, root);
         if (!text && fileParts.length === 0) return; // sem texto e sem arquivo: nada a avaliar
 
-        const d = decide({ prompt: text ?? '', model: inp.model?.modelID, session: inp.sessionID, files: fileParts, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
+        const d = decide({ prompt: text ?? '', model: inp.model?.modelID, session: inp.sessionID, files: fileParts, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare, lang: options.lang }, stateDir: options.stateDir ?? stateDir(), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
         if (options.log) options.log(d.text);
         if (d.action === 'allow') return;
         return await deny(d.text);
       } catch (e) {
         if (e?.precostDeny) throw e;
-        return await deny(`precost: erro interno (${e?.message}); bloqueado por seguranca (falha fechada).`);
+        return await deny(tr(`precost: internal error (${e?.message}); blocked for safety (fail closed).`, `precost: erro interno (${e?.message}); bloqueado por seguranca (falha fechada).`));
       }
     },
     'tool.execute.before': async (input) => {
       if (options.sessionLimitUsd === undefined) return;
-      if (typeof options.sessionLimitUsd !== 'number' || !Number.isFinite(options.sessionLimitUsd)) throw new Error('precost: sessionLimitUsd invalido; bloqueado (falha fechada).');
+      if (typeof options.sessionLimitUsd !== 'number' || !Number.isFinite(options.sessionLimitUsd)) throw new Error(tr('precost: invalid sessionLimitUsd; blocked (fail closed).', 'precost: sessionLimitUsd invalido; bloqueado (falha fechada).'));
       const s = ledger.spent(input.sessionID);
-      if (s > options.sessionLimitUsd) throw new Error(`precost: gasto da sessao US$${s.toFixed(2)} passou do limite US$${options.sessionLimitUsd}. Aumente o limite ou inicie nova sessao.`);
+      if (s > options.sessionLimitUsd) throw new Error(tr(`precost: session spend US$${s.toFixed(2)} passed the US$${options.sessionLimitUsd} limit. Raise the limit or start a new session.`, `precost: gasto da sessao US$${s.toFixed(2)} passou do limite US$${options.sessionLimitUsd}. Aumente o limite ou inicie nova sessao.`));
     },
   };
 };

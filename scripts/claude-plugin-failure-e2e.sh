@@ -19,7 +19,7 @@ D,cmd,args,to,onf=sys.argv[1:]
 json.dump({"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":cmd,"args":json.loads(args),"timeout":int(to),"onFailure":onf}]}]}},open(D+"/hooks/hooks.json","w"))
 PY
 }
-runv(){ before=$(calls); timeout 90 $CC -p "Refatorar o modulo inteiro de pagamentos e reescrever todos os testes" --plugin-dir $W/plug-$1 > $W/out-$1.txt 2>&1; echo $(( $(calls) - before )); }
+runv(){ before=$(calls); timeout 90 $CC -p "Refactor the whole payments module and rewrite all the tests" --plugin-dir $W/plug-$1 > $W/out-$1.txt 2>&1; echo $(( $(calls) - before )); }
 variant ok node "[\"$R/adapters/claude-code/userpromptsubmit.js\"]" 20 block; chk "saudavel bloqueia (0 chamadas)" "$(runv ok)" 0
 variant crash node "[\"$W/nao-existe.js\"]" 20 block; chk "crash do script" "$(runv crash)" 0
 variant nonode node-inexistente-xyz "[\"$R/adapters/claude-code/userpromptsubmit.js\"]" 20 block; chk "node ausente" "$(runv nonode)" 0

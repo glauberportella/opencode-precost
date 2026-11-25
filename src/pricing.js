@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { userPricesPath } from './paths.js';
 import { validatePrices, tableDate } from './prices-update.js';
+import { tr } from './i18n.js';
 const BUNDLED = fileURLToPath(new URL('../data/prices.json', import.meta.url));
 
 // Sem caminho explicito: usa a tabela do usuario (precost update-prices) se for valida e NAO mais antiga que a embutida;
@@ -76,7 +77,7 @@ export function costTotals(price, { freshIn, cachedIn = 0, out, peak, cacheWrite
   if (typeof price.long_context === 'object' || price.long_context === 'unknown') {
     if (typeof peak !== 'number') longUnknown = true;
     else if (peak > threshold) longUnknown = true;
-    else longUnknown = `pico real registrado ${peak} tokens/chamada, abaixo do limiar ${threshold}: faixa longa nao se aplica ao historico`;
+    else longUnknown = tr(`recorded real peak ${peak} tokens/call, below the ${threshold} threshold: the long-context tier does not apply to the history`, `pico real registrado ${peak} tokens/chamada, abaixo do limiar ${threshold}: faixa longa nao se aplica ao historico`);
   }
   const w = price.cache_write_5m ?? price.input;
   return { usd: (freshIn * (price.cache_write_5m ?? price.input) + cacheWrite * w + cachedIn * cachedRate + out * price.output) / 1e6, cacheKnown, longUnknown };

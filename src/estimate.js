@@ -1,4 +1,5 @@
-import { approxTokens, TOKEN_METHOD } from './tokens.js';
+import { approxTokens, tokenMethod } from './tokens.js';
+import { tr } from './i18n.js';
 import { priceAt, costCalls, costTotals } from './pricing.js';
 
 // Premissas padrao (NAO medidas). Aparecem no resultado.
@@ -44,7 +45,7 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
 
   // Cenarios por modelo: o multiplicador de tokenizador (Claude 4.7+, ~30%) so afeta os tokens observados (prompt/arquivos), nao a premissa de sistema.
   // history: lista (vale para todas as linhas) ou mapa {modelo: lista} (cada linha usa so o seu; sem mistura entre modelos comparados).
-  if (Array.isArray(history) && models.length > 1) throw new Error('history em lista unica com varios modelos: use mapa {modelo: lista}');
+  if (Array.isArray(history) && models.length > 1) throw new Error(tr('history as a single list with several models: use a {model: list} map', 'history em lista unica com varios modelos: use mapa {modelo: lista}'));
   const histOf = (model) => (Array.isArray(history) ? history : history?.[model]);
   const build = (mult, hist) => {
     const pT = Math.round(promptTokens * mult), fT = Math.round(fileTokens * mult);
@@ -58,12 +59,12 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     return sc;
   };
   const basisOf = (hist) => (hist && hist.length >= 5
-    ? { kind: 'historico', sessions: hist.length, note: 'P25/P50/P75 de sessoes anteriores deste modelo e projeto, mais a entrada observada desta tarefa somada uma vez; pico por chamada = MAIOR registrado; o historico nao depende do tamanho da tarefa alem disso. Semantica input/cache dos eventos reais NAO validada contra resposta de modelo' }
-    : { kind: 'premissas', note: hist?.length ? `historico com ${hist.length} sessoes (<5) ignorado` : 'sem historico: tres cenarios com premissas fixas, nao medidas', scenarios: DEFAULT_SCENARIOS, cacheHit });
+    ? { kind: 'historico', sessions: hist.length, note: tr('P25/P50/P75 of earlier sessions of this model and project, plus this task\'s observed input added once; peak per call = LARGEST recorded; history does not scale with task size beyond that. Input/cache semantics of real events were NOT validated against a real model response', 'P25/P50/P75 de sessoes anteriores deste modelo e projeto, mais a entrada observada desta tarefa somada uma vez; pico por chamada = MAIOR registrado; o historico nao depende do tamanho da tarefa alem disso. Semantica input/cache dos eventos reais NAO validada contra resposta de modelo') }
+    : { kind: 'premissas', note: hist?.length ? tr(`history with ${hist.length} sessions (<5) ignored`, `historico com ${hist.length} sessoes (<5) ignorado`) : tr('no history: three scenarios with fixed assumptions, not measured', 'sem historico: tres cenarios com premissas fixas, nao medidas'), scenarios: DEFAULT_SCENARIOS, cacheHit });
 
   const rows = models.map((model) => {
     const price = priceAt(prices, model, date);
-    if (!price || typeof price.input !== 'number' || typeof price.output !== 'number') return { model, error: 'sem preco na tabela (n/d, nao tratado como zero)' };
+    if (!price || typeof price.input !== 'number' || typeof price.output !== 'number') return { model, error: tr('no price in the table (n/a, not treated as zero)', 'sem preco na tabela (n/d, nao tratado como zero)') };
     const scenarios = {}, notes = [];
     let lowerBound = false;
     const mult = price.tokenizer_multiplier ?? 1;
@@ -74,20 +75,20 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
       const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u, threshold);
       scenarios[name] = { usd: c.usd, tokens: Array.isArray(u) ? totalsOf(u) : u };
       if (c.longUnknown === true) lowerBound = true;
-      if (!c.cacheKnown) notes.push('sem preco de cache na tabela: entrada em cache cobrada a preco cheio (limite superior)');
-      if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : 'contexto acima do limiar: tabela nao traz taxa longa (desconhecido)');
+      if (!c.cacheKnown) notes.push(tr('no cache price in the table: cached input billed at the full rate (upper bound)', 'sem preco de cache na tabela: entrada em cache cobrada a preco cheio (limite superior)'));
+      if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : tr('context above the threshold: the table has no long-context rate (unknown)', 'contexto acima do limiar: tabela nao traz taxa longa (desconhecido)'));
     }
-    if (mult !== 1) notes.push(`tokens observados x${mult} (tokenizador novo, ~30% a mais; ${'premissa da nota oficial'})`);
-    if (price.cache_write_5m) notes.push(`conservador: toda entrada nova cobrada como cache write 5min (US$${price.cache_write_5m}/1M); economia real do cache nao creditada alem da leitura`);
-    if (price.access_note) notes.push(`acesso: ${price.access_note}`);
-    if (price.cache_write) notes.push(`cache write (US$${price.cache_write}/1M a partir de ${price.cache_write_from}) nao modelado`);
+    if (mult !== 1) notes.push(tr(`observed tokens x${mult} (new tokenizer, ~30% more; assumption from the official note)`, `tokens observados x${mult} (tokenizador novo, ~30% a mais; premissa da nota oficial)`));
+    if (price.cache_write_5m) notes.push(tr(`conservative: all new input billed as 5-minute cache write (US$${price.cache_write_5m}/1M); real cache savings are not credited beyond reads`, `conservador: toda entrada nova cobrada como cache write 5min (US$${price.cache_write_5m}/1M); economia real do cache nao creditada alem da leitura`));
+    if (price.access_note) notes.push(tr(`access: ${price.access_note}`, `acesso: ${price.access_note}`));
+    if (price.cache_write) notes.push(tr(`cache write (US$${price.cache_write}/1M from ${price.cache_write_from}) not modeled`, `cache write (US$${price.cache_write}/1M a partir de ${price.cache_write_from}) nao modelado`));
     const initialUsd = costCalls(price, [{ ctx: base, cachedIn: 0, out: 0 }], threshold).usd;
     const promoActive = price.promo ? { ...price.promo } : null;
     return { model, basis: basisOf(hist), lowerBound, promo: promoActive, price: { input: price.input, output: price.output, cache_read: price.cache_read ?? null }, initialContextEstUsd: initialUsd, scenarios, notes: [...new Set(notes)] };
   });
   const ok = rows.filter((r) => !r.error), kinds = new Set(ok.map((r) => r.basis.kind));
-  const basis = kinds.size === 1 ? ok[0].basis : kinds.size === 0 ? basisOf(undefined) : { kind: 'mista', note: 'ver a base de cada modelo abaixo (historico so onde ha 5+ sessoes do proprio modelo e projeto)' };
-  return { tokenMethod: TOKEN_METHOD, initial, basis, rows, pricesHash: prices._hash ?? null };
+  const basis = kinds.size === 1 ? ok[0].basis : kinds.size === 0 ? basisOf(undefined) : { kind: 'mista', note: tr('see each model\'s basis below (history only where there are 5+ sessions of that model and project)', 'ver a base de cada modelo abaixo (historico so onde ha 5+ sessoes do proprio modelo e projeto)') };
+  return { tokenMethod: tokenMethod(), initial, basis, rows, pricesHash: prices._hash ?? null };
 }
 
 // Beneficio condicional da promocao (credito), SEPARADO da cobranca bruta. Nao e previsao da fatura.

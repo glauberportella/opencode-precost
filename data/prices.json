@@ -1,5 +1,5 @@
 {
- "_comment": "USD por 1M de tokens, Standard/global, API de primeira parte. Campo ausente = desconhecido (nunca zero). Gemini: faixa >200K; Gemini 4 sem faixa >200K (desconhecido). Claude: 1M de contexto a preco padrao, exceto Haiku 5.5 (faixa a 100K). Cache write nao modelado (subestima um pouco). Batch, Priority, Fast mode, residencia de dados (1.1x) nao modelados. Promocao = beneficio condicional, nunca entra no preco bruto. long_context: 'none' = pagina nao lista faixa acima do limiar (preco unico); 'unknown' = tabela sem a coluna (Gemini 4): custo acima do limiar vira limite inferior e exige aprovacao.",
+ "_comment": "USD per 1M tokens, Standard/global, first-party API. Missing field = unknown (never zero). Gemini: tier above 200K; Gemini 4 has no known tier above 200K (unknown). Claude: 1M context at the standard price, except Haiku 5.5 (tier at 100K). Cache write not modeled (slightly underestimates). Batch, Priority, Fast mode and data residency (1.1x) not modeled. Promotion = conditional benefit, never part of the gross price. long_context: 'none' = page lists no tier above the threshold (single price); 'unknown' = table without that column (Gemini 4): cost above the threshold becomes a lower bound and requires approval.",
  "currency": "USD",
  "long_context_threshold_tokens": 200000,
  "models": {
@@ -37,7 +37,7 @@
      "input": 1.5,
      "output": 7.5,
      "cache_read": 0.15,
-     "note": "preco introdutorio ate 31/dez/2026"
+     "note": "introductory price until 2026-12-31"
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
@@ -54,7 +54,7 @@
      "input": 1.5,
      "output": 7.5,
      "cache_read": 0.15,
-     "note": "preco introdutorio ate 31/dez/2026"
+     "note": "introductory price until 2026-12-31"
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
@@ -71,7 +71,7 @@
      "input": 1.5,
      "output": 7.5,
      "cache_read": 0.15,
-     "note": "preco introdutorio ate 31/dez/2026"
+     "note": "introductory price until 2026-12-31"
     }
    ],
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
@@ -87,7 +87,7 @@
     "output": 18.0,
     "cache_read": 0.4
    },
-   "note": "acima de 200K tokens de entrada na consulta, TODOS os tokens usam taxa longa",
+   "note": "above 200K input tokens in the request, ALL tokens use the long-context rate",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
   },
@@ -107,13 +107,13 @@
    "cache_read": 0.15,
    "cache_write": 3.75,
    "cache_write_from": "2027-01-12",
-   "access_note": "pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado",
+   "access_note": "docs page mentions 'verified enterprise customers in select regions' (earlier analysis); real account access not verified",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
    "long_context": "unknown"
   },
   "gemini-4-carbon": {
-   "access_note": "mesmo aviso de acesso enterprise do Neon (analise anterior)",
+   "access_note": "same enterprise access notice as Neon (earlier analysis)",
    "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)",
    "input": 4.0,
@@ -123,7 +123,7 @@
     "until": "2026-11-30",
     "credit_back_pct": 50,
     "conditional": true,
-    "note": "pagina: preco promocional via 50% de creditos de volta sobre gasto liquido. Fatura bruta tratada como preco de lista (4/20), valor inferido do preco pos-promocao e do rodape; o credito e beneficio condicional, nao desconto na fatura"
+    "note": "page: promotional price via 50% credits back on net spend. Gross bill treated as list price (4/20), value inferred from the post-promotion price and the footer; the credit is a conditional benefit, not an invoice discount"
    },
    "changes": [
     {
@@ -143,7 +143,7 @@
     "until": "2026-11-30",
     "credit_back_pct": 50,
     "conditional": true,
-    "note": "pagina: preco promocional via 50% de creditos de volta sobre gasto liquido. Fatura bruta tratada como preco de lista (4/20), valor inferido do preco pos-promocao e do rodape; o credito e beneficio condicional, nao desconto na fatura"
+    "note": "page: promotional price via 50% credits back on net spend. Gross bill treated as list price (4/20), value inferred from the post-promotion price and the footer; the credit is a conditional benefit, not an invoice discount"
    },
    "changes": [
     {
@@ -161,7 +161,7 @@
    "cache_write_1h": 16,
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
-   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "tokenizer_note": "new tokenizer (4.7+): ~30% more tokens for the same text; chars/4 underestimates",
    "long_context": "none",
    "tokenizer_multiplier": 1.3
   },
@@ -173,7 +173,7 @@
    "cache_write_1h": 8,
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
-   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "tokenizer_note": "new tokenizer (4.7+): ~30% more tokens for the same text; chars/4 underestimates",
    "long_context": "none",
    "tokenizer_multiplier": 1.3
   },
@@ -185,7 +185,7 @@
    "cache_write_1h": 4,
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
-   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "tokenizer_note": "new tokenizer (4.7+): ~30% more tokens for the same text; chars/4 underestimates",
    "long_context": "none",
    "tokenizer_multiplier": 1.3
   },
@@ -204,7 +204,7 @@
     "cache_read": 0.05,
     "cache_write_5m": 0.625
    },
-   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "tokenizer_note": "new tokenizer (4.7+): ~30% more tokens for the same text; chars/4 underestimates",
    "tokenizer_multiplier": 1.3
   },
   "claude-sonnet-4.6": {

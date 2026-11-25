@@ -23,6 +23,7 @@ test('evento acumula gasto real, dedup por id; tool.execute.before bloqueia acim
 });
 
 import { writeFileSync, mkdirSync } from 'node:fs';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 const gate = async (opt = {}) => {
   const d = mkdtempSync(join(tmpdir(), 'oc-g-'));
   return { d, p: await PrecostPlugin({ directory: d }, { historyPath: join(d, 'h.json'), stateDir: join(d, 'st'), limitUsd: 20, version: '1.19.6', ...opt }) };

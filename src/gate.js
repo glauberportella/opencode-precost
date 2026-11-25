@@ -5,6 +5,7 @@ import { estimate, range } from './estimate.js';
 import { format } from './format.js';
 import { loadPrices } from './pricing.js';
 import { contextHash } from './context.js';
+import { tr, setLang } from './i18n.js';
 
 // Aprovacao explicita e vinculada. Reenviar o mesmo prompt NUNCA aprova.
 // Fluxo: (1) prompt que nao cabe no limite (ou nao pode ser avaliado) -> bloqueia, cria pendencia com CODIGO aleatorio;
@@ -28,33 +29,34 @@ export function bindingHash({ prompt, model, session, pricesHash, limit, maxUsd,
 }
 const rd = (f) => { try { return JSON.parse(readFileSync(f, 'utf8')); } catch { return null; } };
 const alive = (r, now) => r && now <= r.expiresAt;
-const blockCfg = (why) => ({ action: 'block', command: 'config', text: `precost: configuracao invalida (${why}). Bloqueado por seguranca (falha fechada) ate corrigir a configuracao. Nada foi enviado ao modelo.` });
+const blockCfg = (why) => ({ action: 'block', command: 'config', text: tr(`precost: invalid configuration (${why}). Blocked for safety (fail closed) until the configuration is fixed. Nothing was sent to the model.`, `precost: configuracao invalida (${why}). Bloqueado por seguranca (falha fechada) ate corrigir a configuracao. Nada foi enviado ao modelo.`) });
 
 export function validateConfig(config = {}) {
-  if (config.limitUsd !== undefined && config.limitUsd !== null && !(typeof config.limitUsd === 'number' && Number.isFinite(config.limitUsd) && config.limitUsd >= 0)) return `limitUsd deve ser numero >= 0, recebido ${JSON.stringify(config.limitUsd)}`;
-  if (config.ttlMin !== undefined && !(typeof config.ttlMin === 'number' && Number.isFinite(config.ttlMin) && config.ttlMin > 0)) return `ttlMin deve ser numero > 0, recebido ${JSON.stringify(config.ttlMin)}`;
-  if (config.systemTokens !== undefined && !(typeof config.systemTokens === 'number' && Number.isFinite(config.systemTokens) && config.systemTokens >= 0)) return 'systemTokens deve ser numero >= 0';
-  if (config.trustConfiguredModel !== undefined && typeof config.trustConfiguredModel !== 'boolean') return 'trustConfiguredModel deve ser true ou false';
-  if (config.cacheHit !== undefined && !(typeof config.cacheHit === 'number' && config.cacheHit >= 0 && config.cacheHit <= 1)) return 'cacheHit deve estar entre 0 e 1';
+  if (config.limitUsd !== undefined && config.limitUsd !== null && !(typeof config.limitUsd === 'number' && Number.isFinite(config.limitUsd) && config.limitUsd >= 0)) return tr(`limitUsd must be a number >= 0, got ${JSON.stringify(config.limitUsd)}`, `limitUsd deve ser numero >= 0, recebido ${JSON.stringify(config.limitUsd)}`);
+  if (config.ttlMin !== undefined && !(typeof config.ttlMin === 'number' && Number.isFinite(config.ttlMin) && config.ttlMin > 0)) return tr(`ttlMin must be a number > 0, got ${JSON.stringify(config.ttlMin)}`, `ttlMin deve ser numero > 0, recebido ${JSON.stringify(config.ttlMin)}`);
+  if (config.systemTokens !== undefined && !(typeof config.systemTokens === 'number' && Number.isFinite(config.systemTokens) && config.systemTokens >= 0)) return tr('systemTokens must be a number >= 0', 'systemTokens deve ser numero >= 0');
+  if (config.trustConfiguredModel !== undefined && typeof config.trustConfiguredModel !== 'boolean') return tr('trustConfiguredModel must be true or false', 'trustConfiguredModel deve ser true ou false');
+  if (config.cacheHit !== undefined && !(typeof config.cacheHit === 'number' && config.cacheHit >= 0 && config.cacheHit <= 1)) return tr('cacheHit must be between 0 and 1', 'cacheHit deve estar entre 0 e 1');
   return null;
 }
 
 export function decide({ prompt, model, session, config = {}, stateDir, now = Date.now(), history, files = [], modelProof }) {
+  setLang(config.lang);
   mkdirSync(stateDir, { recursive: true });
   const bad = validateConfig(config);
   if (bad) return blockCfg(bad);
   const ttl = (config.ttlMin ?? 10) * 60_000;
-  if (Array.isArray(history) && new Set([model, ...(config.compare ?? []), ...(modelProof?.candidates ?? [])].filter(Boolean)).size > 1) return blockCfg('historico em lista unica com varios modelos: use mapa {modelo: lista}; misturar historicos entre modelos nao e permitido');
+  if (Array.isArray(history) && new Set([model, ...(config.compare ?? []), ...(modelProof?.candidates ?? [])].filter(Boolean)).size > 1) return blockCfg(tr('history as a single list with several models: use a {model: list} map; mixing histories across models is not allowed', 'historico em lista unica com varios modelos: use mapa {modelo: lista}; misturar historicos entre modelos nao e permitido'));
 
   let m;
   if (LAST.test(prompt)) {
-    let t = 'precost: sem bloqueio registrado nesta sessao.'; try { t = readFileSync(join(stateDir, lastFile(session)), 'utf8'); } catch { /* nenhum */ }
+    let t = tr('precost: no block recorded in this session.', 'precost: sem bloqueio registrado nesta sessao.'); try { t = readFileSync(join(stateDir, lastFile(session)), 'utf8'); } catch { /* nenhum */ }
     return { action: 'block', text: t, command: 'last' };
   }
   if ((m = PREVIEW.exec(prompt))) { // previa sob demanda: digitada pelo usuario, nunca chega ao modelo, sem gasto
-    let prices0; try { prices0 = loadPrices(config.prices); } catch (e) { return blockCfg(`tabela de precos ilegivel: ${e.message}`); }
+    let prices0; try { prices0 = loadPrices(config.prices); } catch (e) { return blockCfg(tr(`price table unreadable: ${e.message}`, `tabela de precos ilegivel: ${e.message}`)); }
     const r0 = estimate({ systemTokens: config.systemTokens, task: m[1], models: [model, ...(config.compare ?? [])].filter(Boolean).length ? [model, ...(config.compare ?? [])].filter(Boolean) : Object.keys(prices0.models), prices: prices0, history, cacheHit: config.cacheHit ?? 0 });
-    return { action: 'block', command: 'preview', text: format(r0, { title: `Previa sob demanda (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'}). Nada foi enviado ao modelo.` }) };
+    return { action: 'block', command: 'preview', text: format(r0, { title: tr(`On-demand preview (ESTIMATE; active model: ${model ?? 'unknown'}). Nothing was sent to the model.`, `Previa sob demanda (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'}). Nada foi enviado ao modelo.`) }) };
   }
   if ((m = REVOKE.exec(prompt))) {
     const want = m[1].toLowerCase();
@@ -64,22 +66,22 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
       const r = rd(join(stateDir, f));
       if (want === 'all' || !r || r.code === want) { unlinkSync(join(stateDir, f)); n++; }
     }
-    return { action: 'block', text: `precost: ${n} pendencia(s)/aprovacao(oes) revogada(s).`, command: 'revoke', revoked: n };
+    return { action: 'block', text: tr(`precost: ${n} pending item(s)/approval(s) revoked.`, `precost: ${n} pendencia(s)/aprovacao(oes) revogada(s).`), command: 'revoke', revoked: n };
   }
   if ((m = APPROVE.exec(prompt))) {
     const code = m[1].toLowerCase();
     const pf = join(stateDir, `pending-${code}.json`);
     const p = existsSync(pf) ? rd(pf) : null;
-    if (!p) return { action: 'block', text: 'precost: codigo desconhecido, expirado ou ja usado. Nada foi aprovado.', command: 'approve' };
-    if (!alive(p, now)) { unlinkSync(pf); return { action: 'block', text: 'precost: codigo expirado. Nada foi aprovado; reenvie o prompt para gerar outro.', command: 'approve' }; }
-    if (p.session !== (session ?? null)) return { action: 'block', text: 'precost: codigo pertence a outra sessao. Nada foi aprovado.', command: 'approve' };
+    if (!p) return { action: 'block', text: tr('precost: unknown, expired or already used code. Nothing was approved.', 'precost: codigo desconhecido, expirado ou ja usado. Nada foi aprovado.'), command: 'approve' };
+    if (!alive(p, now)) { unlinkSync(pf); return { action: 'block', text: tr('precost: code expired. Nothing was approved; resend the prompt to get a new one.', 'precost: codigo expirado. Nada foi aprovado; reenvie o prompt para gerar outro.'), command: 'approve' }; }
+    if (p.session !== (session ?? null)) return { action: 'block', text: tr('precost: code belongs to another session. Nothing was approved.', 'precost: codigo pertence a outra sessao. Nada foi aprovado.'), command: 'approve' };
     writeFileSync(join(stateDir, `approved-${code}.json`), JSON.stringify({ binding: p.binding, code, expiresAt: now + ttl }));
     unlinkSync(pf);
-    return { action: 'block', text: `precost: aprovado por ${config.ttlMin ?? 10} min, uso unico. Agora reenvie o prompt original sem alteracao. Para desfazer: precost revoke ${code}`, command: 'approve' };
+    return { action: 'block', text: tr(`precost: approved for ${config.ttlMin ?? 10} min, single use. Now resend the original prompt unchanged. To undo: precost revoke ${code}`, `precost: aprovado por ${config.ttlMin ?? 10} min, uso unico. Agora reenvie o prompt original sem alteracao. Para desfazer: precost revoke ${code}`), command: 'approve' };
   }
 
   let prices;
-  try { prices = loadPrices(config.prices); } catch (e) { return blockCfg(`tabela de precos ilegivel: ${e.message}`); }
+  try { prices = loadPrices(config.prices); } catch (e) { return blockCfg(tr(`price table unreadable: ${e.message}`, `tabela de precos ilegivel: ${e.message}`)); }
   const limit = config.limitUsd;
   const gated = typeof limit === 'number';
   const unproven = modelProof && modelProof.proven === false && modelProof.candidates?.length > 1;
@@ -87,27 +89,27 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   const res = estimate({ systemTokens: config.systemTokens, task: prompt, fileTexts: files.filter((f) => f.text !== undefined).map((f) => f.text), models: models.length ? models : Object.keys(prices.models), prices, history, cacheHit: config.cacheHit ?? 0 });
   const active = model ? res.rows.find((r) => r.model === model && !r.error) : null;
   const skipped = files.filter((f) => f.skipped);
-  let text = format(res, { title: `Previa de custo (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'})` });
-  if (files.length) text += `\nArquivos de contexto: ${files.map((f) => f.skipped ? `${f.path} (NAO contado: ${f.skipped})` : `${f.path} (${f.bytes} bytes)`).join(', ')}.`;
-  if (!gated) return { action: 'allow', text: text + '\nSEM GATE: limitUsd nao configurado; apenas informativo.', res, ungated: true };
+  let text = format(res, { title: tr(`Cost preview (ESTIMATE; active model: ${model ?? 'unknown'})`, `Previa de custo (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'})`) });
+  if (files.length) text += tr('\nContext files: ', '\nArquivos de contexto: ') + `${files.map((f) => f.skipped ? `${f.path} (${tr('NOT counted', 'NAO contado')}: ${f.skipped})` : `${f.path} (${f.bytes} bytes)`).join(', ')}.`;
+  if (!gated) return { action: 'allow', text: text + tr('\nNO GATE: limitUsd is not configured; informational only.', '\nSEM GATE: limitUsd nao configurado; apenas informativo.'), res, ungated: true };
 
   // O gate decide se precisa de aprovacao: faixa alta acima do limite, modelo sem preco, ou custo so com limite inferior.
   let reason = null, maxUsd = null, bindModel = model;
-  if (!active) reason = `modelo ativo ${model ? `"${model}" sem preco na tabela` : 'desconhecido'}: custo nao pode ser avaliado`;
+  if (!active) reason = tr(`active model ${model ? `"${model}" has no price in the table` : 'unknown'}: cost cannot be evaluated`, `modelo ativo ${model ? `"${model}" sem preco na tabela` : 'desconhecido'}: custo nao pode ser avaliado`);
   else {
     maxUsd = range(active).max;
-    if (active.lowerBound) { reason = 'contexto acima do limiar sem taxa conhecida: o valor mostrado e so limite inferior'; maxUsd = Infinity; }
+    if (active.lowerBound) { reason = tr('context above the threshold with no known rate: the value shown is only a lower bound', 'contexto acima do limiar sem taxa conhecida: o valor mostrado e so limite inferior'); maxUsd = Infinity; }
     if (unproven) { // modelo efetivo nao comprovado: o gate usa o PIOR CASO entre os candidatos e diz isso
       const rows = res.rows.filter((r) => modelProof.candidates.includes(r.model) && !r.error);
       const worst = rows.map((r) => ({ r, v: r.lowerBound ? Infinity : range(r).max })).sort((a, b) => b.v - a.v)[0];
       const mine = maxUsd;
       maxUsd = worst.v; bindModel = `${model}|nao-comprovado:${modelProof.source}|pior:${worst.r.model}`;
-      text += `\nMODELO NAO COMPROVADO (fonte: ${modelProof.source}). O gate usa o PIOR CASO do CATALOGO suportado (modelo fora do catalogo nao e coberto e fecha o gate) entre ${rows.length} modelos candidatos: ${worst.r.model} ${Number.isFinite(worst.v) ? 'US$' + worst.v.toFixed(2) : 'sem limite superior conhecido'}; com ${model} a faixa alta seria ${Number.isFinite(mine) ? 'US$' + mine.toFixed(2) : 'indefinida'}. Para usar o preco do modelo declarado, informe o modelo (PRECOST_MODEL ou claude --model) ou declare trustConfiguredModel:true no config.`;
-      if (maxUsd > limit) reason = `modelo efetivo nao comprovado e o pior caso (${worst.r.model}) passa do limite US$${limit}`;
-    } else if (!active.lowerBound && maxUsd > limit) reason = `faixa alta estimada US$${maxUsd.toFixed(2)} acima do limite US$${limit} (faixa alta = P75/cenario grande, NAO e teto de gasto)`;
+      text += tr(`\nMODEL NOT PROVEN (source: ${modelProof.source}). The gate uses the WORST CASE of the supported CATALOG (a model outside the catalog is not covered and closes the gate) among ${rows.length} candidate models: ${worst.r.model} ${Number.isFinite(worst.v) ? 'US$' + worst.v.toFixed(2) : 'no known upper bound'}; with ${model} the high range would be ${Number.isFinite(mine) ? 'US$' + mine.toFixed(2) : 'undefined'}. To use the declared model's price, state the model (PRECOST_MODEL or claude --model) or set trustConfiguredModel:true in the config.`, `\nMODELO NAO COMPROVADO (fonte: ${modelProof.source}). O gate usa o PIOR CASO do CATALOGO suportado (modelo fora do catalogo nao e coberto e fecha o gate) entre ${rows.length} modelos candidatos: ${worst.r.model} ${Number.isFinite(worst.v) ? 'US$' + worst.v.toFixed(2) : 'sem limite superior conhecido'}; com ${model} a faixa alta seria ${Number.isFinite(mine) ? 'US$' + mine.toFixed(2) : 'indefinida'}. Para usar o preco do modelo declarado, informe o modelo (PRECOST_MODEL ou claude --model) ou declare trustConfiguredModel:true no config.`);
+      if (maxUsd > limit) reason = tr(`effective model not proven and the worst case (${worst.r.model}) exceeds the US$${limit} limit`, `modelo efetivo nao comprovado e o pior caso (${worst.r.model}) passa do limite US$${limit}`);
+    } else if (!active.lowerBound && maxUsd > limit) reason = tr(`estimated high range US$${maxUsd.toFixed(2)} above the US$${limit} limit (high range = P75 / large scenario, NOT a spending cap)`, `faixa alta estimada US$${maxUsd.toFixed(2)} acima do limite US$${limit} (faixa alta = P75/cenario grande, NAO e teto de gasto)`);
   }
   if (!reason && skipped.length === 0) return { action: 'allow', text, res };
-  if (!reason) reason = `arquivos de contexto nao contados (${skipped.map((f) => f.path).join(', ')}): custo pode estar subestimado`;
+  if (!reason) reason = tr(`context files not counted (${skipped.map((f) => f.path).join(', ')}): cost may be underestimated`, `arquivos de contexto nao contados (${skipped.map((f) => f.path).join(', ')}): custo pode estar subestimado`);
 
   const binding = bindingHash({ prompt, model: bindModel, session, pricesHash: prices._hash, limit, maxUsd, ctx: contextHash(files) });
   for (const f of readdirSync(stateDir)) {
@@ -115,12 +117,12 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
     const a = rd(join(stateDir, f));
     if (a && a.binding === binding) {
       unlinkSync(join(stateDir, f)); // uso unico, mesmo expirado
-      if (alive(a, now)) return { action: 'allow', text: text + `\n(aprovacao ${a.code} consumida)`, res, approved: true };
+      if (alive(a, now)) return { action: 'allow', text: text + tr(`\n(approval ${a.code} consumed)`, `\n(aprovacao ${a.code} consumida)`), res, approved: true };
     }
   }
   const code = randomBytes(4).toString('hex');
   writeFileSync(join(stateDir, `pending-${code}.json`), JSON.stringify({ binding, code, session: session ?? null, expiresAt: now + ttl }));
-  const out = text + `\n\nBLOQUEADO: ${reason}. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo, com estes precos e estes arquivos, digite exatamente: precost approve ${code} (vale ${config.ttlMin ?? 10} min, uso unico; desfaz com precost revoke ${code}). Depois reenvie o prompt sem alteracao. Isto nao limita o gasto durante a tarefa.`;
+  const out = text + tr(`\n\nBLOCKED: ${reason}. Resending the prompt does NOT approve it. To approve this prompt, on this model, with these prices and these files, type exactly: precost approve ${code} (valid ${config.ttlMin ?? 10} min, single use; undo with precost revoke ${code}). Then resend the prompt unchanged. This does not cap spending during the task.`, `\n\nBLOQUEADO: ${reason}. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo, com estes precos e estes arquivos, digite exatamente: precost approve ${code} (vale ${config.ttlMin ?? 10} min, uso unico; desfaz com precost revoke ${code}). Depois reenvie o prompt sem alteracao. Isto nao limita o gasto durante a tarefa.`);
   writeFileSync(join(stateDir, lastFile(session)), out);
   return { action: 'block', code, text: out, res };
 }

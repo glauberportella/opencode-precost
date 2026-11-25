@@ -26,7 +26,7 @@ def send(t):
     pump(1); os.write(fd,b'\r'); pump(8)
 def ncalls():
     p=W+'/mock.log'; return sum(1 for l in open(p) if 'chat/completions' in l and int(l.split()[-1]) > 10000) if os.path.exists(p) else 0  # so conta o corpo grande: a chamada de ~2,4 KB e a geracao de titulo da sessao
-P='refatorar o modulo inteiro de pagamentos'
+P='refactor the whole payments module'
 send(P); c0=ncalls()
 g=open(W+'/gate.log').read() if os.path.exists(W+'/gate.log') else ''
 m=re.search(r'precost approve ([0-9a-f]{8})',g); code=m.group(1) if m else None

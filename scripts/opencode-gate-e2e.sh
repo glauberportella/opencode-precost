@@ -14,12 +14,12 @@ JS
 B=http://127.0.0.1:4570; ID=$(curl -s -X POST $B/session -H 'content-type: application/json' -d '{"title":"gate"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
 FAIL=0; chk(){ [ "$1" = "$2" ] || { echo "FALHOU: esperado $2, obtido $1"; FAIL=1; }; }
 send(){ curl -s -m 25 -o /dev/null -w "HTTP %{http_code}; " -X POST $B/session/$ID/message -H 'content-type: application/json' -d "{\"model\":{\"providerID\":\"google\",\"modelID\":\"gemini-4-neon\"},\"parts\":[{\"type\":\"text\",\"text\":\"$1\"}]}"; sleep 1; N=$(curl -s $B/session/$ID/message | python3 -c 'import sys,json;print(len(json.load(sys.stdin)))'); echo "mensagens na sessao: $N"; }
-echo "1 bloqueado:"; send "refatorar o modulo inteiro"; chk "$N" 0
+echo "1 bloqueado:"; send "refactor the whole module"; chk "$N" 0
 CODE=$(grep -o 'precost approve [0-9a-f]\{8\}' gate.log | head -1 | awk '{print $3}')
-echo "2 reenvio sem aprovar:"; send "refatorar o modulo inteiro"; chk "$N" 0
+echo "2 reenvio sem aprovar:"; send "refactor the whole module"; chk "$N" 0
 echo "3 approve:"; send "precost approve $CODE"; chk "$N" 0
-echo "4 reenvio aprovado (chega ao provedor):"; send "refatorar o modulo inteiro"; chk "$N" 1
-echo "5 reenvio de novo (uso unico):"; send "refatorar o modulo inteiro"; chk "$N" 1
+echo "4 reenvio aprovado (chega ao provedor):"; send "refactor the whole module"; chk "$N" 1
+echo "5 reenvio de novo (uso unico):"; send "refactor the whole module"; chk "$N" 1
 pkill -f "opencode.* serve" || true
 CODEOK=$(grep -c "precost approve" gate.log || true)
 [ "$CODEOK" -ge 1 ] || { echo "FALHOU: texto de bloqueio nao chegou ao log"; FAIL=1; }

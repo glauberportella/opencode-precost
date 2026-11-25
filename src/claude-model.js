@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { claudeConfigDir } from './paths.js';
+import { tr } from './i18n.js';
 
 // Modelo ativo do Claude Code. O evento do hook NAO traz modelo (observado na 2.1.332), entao a resolucao vem de fontes indiretas.
 // Nenhuma e prova tecnica do modelo do PROXIMO prompt. PRECOST_MODEL e declaracao do operador (aceita sem pior caso; nao forca o request).
@@ -28,9 +29,9 @@ export function declaredModels({ cwd, env = process.env, config = {} }) {
   const dirs = [claudeConfigDir(env)];
   for (const f of [join(dirs[0], 'settings.json'), cwd && join(cwd, '.claude', 'settings.json'), cwd && join(cwd, '.claude', 'settings.local.json')].filter(Boolean)) {
     const s = rj(f); if (!s) continue;
-    if (s.model) out.push({ model: s.model, source: `settings do Claude (${f})` });
-    if (s.env?.ANTHROPIC_MODEL) out.push({ model: s.env.ANTHROPIC_MODEL, source: `settings do Claude env (${f})` });
+    if (s.model) out.push({ model: s.model, source: tr(`Claude settings (${f})`, `settings do Claude (${f})`) });
+    if (s.env?.ANTHROPIC_MODEL) out.push({ model: s.env.ANTHROPIC_MODEL, source: tr(`Claude settings env (${f})`, `settings do Claude env (${f})`) });
   }
-  if (config.model) out.push({ model: config.model, source: 'config.model do precost' });
+  if (config.model) out.push({ model: config.model, source: tr('precost config.model', 'config.model do precost') });
   return out;
 }

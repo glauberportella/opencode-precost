@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { validatePrices, diffPrices, tableDate, fetchSource } from '../src/prices-update.js';
 import { stateDir, configPath, ledgerPath, userPricesPath, safeId } from '../src/paths.js';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const bundled = JSON.parse(readFileSync(join(root, 'data/prices.json'), 'utf8'));

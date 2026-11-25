@@ -15,7 +15,7 @@ variant(){ # $1 nome, $2 sed da linha do UserPromptSubmit, $3 timeout
 import sys,json; d=json.load(sys.stdin); h=d['hooks']['UserPromptSubmit'][0]['hooks'][0]; h['command']=sys.argv[1] or h['command']
 if sys.argv[2]: h['timeout']=int(sys.argv[2])
 json.dump(d,open('$W/s-$1.json','w'))" "$2" "$3"; }
-runv(){ before=$(calls); timeout 90 $CC -p "Refatorar o modulo inteiro de pagamentos e reescrever todos os testes" --settings $W/s-$1.json > $W/out-$1.txt 2>&1; echo $(( $(calls) - before )); }
+runv(){ before=$(calls); timeout 90 $CC -p "Refactor the whole payments module and rewrite all the tests" --settings $W/s-$1.json > $W/out-$1.txt 2>&1; echo $(( $(calls) - before )); }
 variant ok "" ""; chk "saudavel bloqueia (0 chamadas)" "$(runv ok)" 0
 variant crash "node $W/nao-existe.js" ""; chk "crash do script" "$(runv crash)" 0
 variant nonode "node-inexistente-xyz $R/adapters/claude-code/userpromptsubmit.js" ""; chk "node ausente" "$(runv nonode)" 0

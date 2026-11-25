@@ -42,15 +42,15 @@ async function claude() {
   try {
     const sid = randomUUID();
     let out = run(P, R, `--session-id ${sid}`);
-    chk('1 bloqueia', out.includes('BLOQUEADO'), true); chk('1 modelo nao chamado', calls(), 0);
+    chk('1 bloqueia', out.includes('BLOCKED'), true); chk('1 modelo nao chamado', calls(), 0);
     const code = (out.match(/precost approve ([0-9a-f]{8})/) || [])[1];
     chk('1 codigo de aprovacao presente', !!code, true);
     out = run(`precost approve ${code}`, R, `--resume ${sid}`);
-    chk('2 aprovado (nao chama modelo)', out.includes('aprovado por') && calls() === 0, true);
+    chk('2 aprovado (nao chama modelo)', out.includes('approved for') && calls() === 0, true);
     out = run(P, R, `--resume ${sid}`);
     chk('3 reenvio chama o modelo 1x', calls(), 1); chk('3 resposta do modelo', out.includes('mock ok'), true);
     out = run(P, R, `--resume ${sid}`);
-    chk('4 uso unico: bloqueia de novo', out.includes('BLOQUEADO'), true); chk('4 modelo nao chamado de novo', calls(), 1);
+    chk('4 uso unico: bloqueia de novo', out.includes('BLOCKED'), true); chk('4 modelo nao chamado de novo', calls(), 1);
     // falha fechada: hook.json com script inexistente e onFailure block
     const variant = (name, command, args, onFailure) => {
       const D = join(W, 'plug-' + name); mkdirSync(join(D, 'hooks'), { recursive: true });
@@ -95,7 +95,7 @@ export const P = async (input) => PrecostPlugin(input, { limitUsd: 0.5, version:
       await sleep(1000);
       return (await (await fetch(`${B}/session/${id}/message`)).json()).length;
     };
-    const T = 'refatorar o modulo inteiro';
+    const T = 'refactor the whole module';
     chk('1 bloqueado: 0 mensagens', await send(T), 0);
     const log = () => (existsSync(gateLog) ? readFileSync(gateLog, 'utf8') : '');
     const code = (log().match(/precost approve ([0-9a-f]{8})/) || [])[1];

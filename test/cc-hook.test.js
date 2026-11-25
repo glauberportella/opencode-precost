@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 
 const hook = fileURLToPath(new URL('../adapters/claude-code/userpromptsubmit.js', import.meta.url));
 const tracker = fileURLToPath(new URL('../adapters/claude-code/track-model.js', import.meta.url));

@@ -5,6 +5,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { stateDir as stateDirOf, safeId, configPath as configPathOf } from '../../src/paths.js';
 import { join } from 'node:path';
+import { tr, setLang } from '../../src/i18n.js';
 
 const block = (text) => { process.stdout.write(JSON.stringify({ decision: 'block', reason: text, hookSpecificOutput: { hookEventName: 'UserPromptSubmit', suppressOriginalPrompt: true } })); process.exit(0); };
 const stateDir = stateDirOf();
@@ -14,33 +15,34 @@ const cfgPath = configPathOf();
 let config = {}, hasCfg = false;
 if (existsSync(cfgPath)) {
   hasCfg = true;
-  try { config = JSON.parse(readFileSync(cfgPath, 'utf8')); } catch (e) { block(`precost: config ${cfgPath} ilegivel (${e.message}). Bloqueado por seguranca ate corrigir.`); }
+  try { config = JSON.parse(readFileSync(cfgPath, 'utf8')); } catch (e) { block(tr(`precost: config ${cfgPath} unreadable (${e.message}). Blocked for safety until fixed.`, `precost: config ${cfgPath} ilegivel (${e.message}). Bloqueado por seguranca ate corrigir.`)); }
 }
+setLang(config.lang);
 const gatedCfg = hasCfg && config.limitUsd !== undefined && config.limitUsd !== null;
-const failure = (why) => (gatedCfg ? block(`precost: ${why}. Bloqueado por seguranca (falha fechada); nada foi enviado ao modelo.`) : (process.stdout.write(JSON.stringify({ systemMessage: `precost: ${why}; sem previa nem gate neste prompt.` })), process.exit(0)));
+const failure = (why) => (gatedCfg ? block(tr(`precost: ${why}. Blocked for safety (fail closed); nothing was sent to the model.`, `precost: ${why}. Bloqueado por seguranca (falha fechada); nada foi enviado ao modelo.`)) : (process.stdout.write(JSON.stringify({ systemMessage: tr(`precost: ${why}; no preview and no gate for this prompt.`, `precost: ${why}; sem previa nem gate neste prompt.`) })), process.exit(0)));
 
 let ev;
-try { ev = JSON.parse(readFileSync(0, 'utf8')); } catch (e) { failure('entrada do hook ilegivel'); }
+try { ev = JSON.parse(readFileSync(0, 'utf8')); } catch (e) { failure(tr('hook input unreadable', 'entrada do hook ilegivel')); }
 
 // Modelo ativo: o evento NAO traz (observado na 2.1.332). Ver src/claude-model.js para fontes comprovadas e nao comprovadas.
 let model, modelSource, proven = false, observed = false, declared = [];
-if (process.env.PRECOST_MODEL) { model = process.env.PRECOST_MODEL; modelSource = 'env PRECOST_MODEL (declaracao do operador, NAO verificada contra o request: nao forca o modelo do Claude; se ele usar outro, o preco aprovado e o do modelo declarado)'; proven = true; }
-if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${safeId(ev.session_id)}.json`), 'utf8')).model; if (model) { modelSource = 'rastreador (SessionStart/PostModelSwitch; observado, pode estar defasado)'; observed = true; } } catch { /* nao rastreado */ } }
-if (!model && ev.transcript_path) { const { lastModel } = await import('../../src/claude-transcript.js'); model = lastModel(ev.transcript_path) ?? undefined; if (model) { modelSource = 'transcript (ultima resposta; observado, nao garante a proxima apos troca de modelo)'; observed = true; } }
-if (!model) { const { modelFromProcessChain } = await import('../../src/claude-model.js'); model = modelFromProcessChain() ?? undefined; if (model) { modelSource = 'flag --model do processo claude (observado no inicio; /model pode ter trocado)'; observed = true; } }
+if (process.env.PRECOST_MODEL) { model = process.env.PRECOST_MODEL; modelSource = tr('env PRECOST_MODEL (operator declaration, NOT verified against the request: it does not force the Claude model; if Claude uses another, the approved price is the declared model\'s)', 'env PRECOST_MODEL (declaracao do operador, NAO verificada contra o request: nao forca o modelo do Claude; se ele usar outro, o preco aprovado e o do modelo declarado)'); proven = true; }
+if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${safeId(ev.session_id)}.json`), 'utf8')).model; if (model) { modelSource = tr('tracker (SessionStart/PostModelSwitch; observed, may be stale)', 'rastreador (SessionStart/PostModelSwitch; observado, pode estar defasado)'); observed = true; } } catch { /* nao rastreado */ } }
+if (!model && ev.transcript_path) { const { lastModel } = await import('../../src/claude-transcript.js'); model = lastModel(ev.transcript_path) ?? undefined; if (model) { modelSource = tr('transcript (last response; observed, does not guarantee the next one after a model switch)', 'transcript (ultima resposta; observado, nao garante a proxima apos troca de modelo)'); observed = true; } }
+if (!model) { const { modelFromProcessChain } = await import('../../src/claude-model.js'); model = modelFromProcessChain() ?? undefined; if (model) { modelSource = tr('--model flag of the claude process (observed at start; /model may have changed it)', 'flag --model do processo claude (observado no inicio; /model pode ter trocado)'); observed = true; } }
 if (!model) {
   const { declaredModels } = await import('../../src/claude-model.js');
   declared = declaredModels({ cwd: ev.cwd, config });
-  if (declared.length) { model = declared[0].model; modelSource = declared[0].source; const distinct = new Set(declared.map((x) => x.model)); proven = config.trustConfiguredModel === true && distinct.size === 1; if (distinct.size > 1) modelSource += ` (CONFLITO entre ${[...distinct].join(', ')})`; }
+  if (declared.length) { model = declared[0].model; modelSource = declared[0].source; const distinct = new Set(declared.map((x) => x.model)); proven = config.trustConfiguredModel === true && distinct.size === 1; if (distinct.size > 1) modelSource += tr(` (CONFLICT between ${[...distinct].join(', ')})`, ` (CONFLITO entre ${[...distinct].join(', ')})`); }
 }
 
 // So PRECOST_MODEL e aceito sem pior caso, como DECLARACAO do operador (nao e prova tecnica do modelo efetivo). Fonte observada (tracker/transcript/flag) e a melhor evidencia, mas NAO garante o modelo da proxima resposta (troca de modelo): so conta como comprovada com trustConfiguredModel:true e sem conflito com fontes declaradas.
 if (observed) {
   const { declaredModels } = await import('../../src/claude-model.js');
   declared = declaredModels({ cwd: ev.cwd, config }).filter((x) => x.model !== model);
-  if (declared.length) modelSource += ` (CONFLITO com ${[...new Set(declared.map((x) => x.model))].join(', ')})`;
+  if (declared.length) modelSource += tr(` (CONFLICT with ${[...new Set(declared.map((x) => x.model))].join(', ')})`, ` (CONFLITO com ${[...new Set(declared.map((x) => x.model))].join(', ')})`);
   proven = config.trustConfiguredModel === true && declared.length === 0;
-  if (ev.transcript_path) { const { pendingModelSwitch } = await import('../../src/claude-transcript.js'); const sw = pendingModelSwitch(ev.transcript_path); if (sw) { proven = false; modelSource += ` (TROCA DE MODELO /model${sw.args ? ' ' + sw.args : ''} registrada no transcript depois da ultima resposta: o modelo atual pode ser outro)`; if (sw.args) declared.push({ model: sw.args, source: '/model do transcript' }); } }
+  if (ev.transcript_path) { const { pendingModelSwitch } = await import('../../src/claude-transcript.js'); const sw = pendingModelSwitch(ev.transcript_path); if (sw) { proven = false; modelSource += tr(` (MODEL SWITCH /model${sw.args ? ' ' + sw.args : ''} recorded in the transcript after the last response: the current model may be different)`, ` (TROCA DE MODELO /model${sw.args ? ' ' + sw.args : ''} registrada no transcript depois da ultima resposta: o modelo atual pode ser outro)`); if (sw.args) declared.push({ model: sw.args, source: tr('/model from the transcript', '/model do transcript') }); } }
 }
 
 let d;
@@ -54,7 +56,7 @@ try {
   const prices0 = loadPrices(config.prices);
   const candidates = !proven && model ? [...new Set([model, ...declared.map((x) => x.model), ...(/^claude/i.test(model) ? Object.keys(prices0.models).filter((k) => k.startsWith('claude-')) : [])])] : [];
   d = decide({ prompt: ev.prompt ?? '', model, session: ev.session_id, config: { systemTokens: 13000, ...config }, stateDir, history, files: filesFromPrompt(ev.prompt ?? '', root), modelProof: model ? { proven, source: modelSource, candidates } : undefined });
-  if (modelSource && d.text) d.text += `\nModelo ativo vem de: ${modelSource}.`;
-} catch (e) { failure(`erro interno (${e.message})`); }
+  if (modelSource && d.text) d.text += tr(`\nActive model comes from: ${modelSource}.`, `\nModelo ativo vem de: ${modelSource}.`);
+} catch (e) { failure(tr(`internal error (${e.message})`, `erro interno (${e.message})`)); }
 if (d.action === 'block') block(d.text);
 else process.stdout.write(JSON.stringify({ systemMessage: d.text }));

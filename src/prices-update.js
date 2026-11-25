@@ -3,21 +3,22 @@
 import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync, unlinkSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import { tr } from './i18n.js';
 
 // Sem fonte padrao embutida: uma URL que ainda nao existe falharia em campo. Informe --from ou PRECOST_PRICES_SOURCE.
 export const STALE_DAYS = 30;
 const NUM_FIELDS = ['input', 'output', 'cache_read', 'cache_write_5m', 'cache_write', 'tokenizer_multiplier'];
 
 export function validatePrices(t) {
-  if (!t || typeof t !== 'object' || Array.isArray(t)) return 'tabela nao e um objeto JSON';
-  if (t.currency !== 'USD') return 'currency deve ser "USD"';
-  if (!t.models || typeof t.models !== 'object' || !Object.keys(t.models).length) return 'models ausente ou vazio';
+  if (!t || typeof t !== 'object' || Array.isArray(t)) return tr('table is not a JSON object', 'tabela nao e um objeto JSON');
+  if (t.currency !== 'USD') return tr('currency must be "USD"', 'currency deve ser "USD"');
+  if (!t.models || typeof t.models !== 'object' || !Object.keys(t.models).length) return tr('models missing or empty', 'models ausente ou vazio');
   for (const [id, m] of Object.entries(t.models)) {
-    if (!m || typeof m !== 'object') return `${id}: entrada invalida`;
-    for (const f of ['input', 'output']) if (!(typeof m[f] === 'number' && Number.isFinite(m[f]) && m[f] >= 0)) return `${id}: ${f} deve ser numero >= 0`;
-    for (const f of NUM_FIELDS) if (m[f] !== undefined && !(typeof m[f] === 'number' && Number.isFinite(m[f]) && m[f] >= 0)) return `${id}: ${f} deve ser numero >= 0 (campo ausente = desconhecido)`;
-    if (typeof m.source !== 'string' || !/^https:\/\//.test(m.source)) return `${id}: source (https) obrigatorio`;
-    if (typeof m.read !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(m.read)) return `${id}: read (data yyyy-mm-dd) obrigatorio`;
+    if (!m || typeof m !== 'object') return tr(`${id}: invalid entry`, `${id}: entrada invalida`);
+    for (const f of ['input', 'output']) if (!(typeof m[f] === 'number' && Number.isFinite(m[f]) && m[f] >= 0)) return tr(`${id}: ${f} must be a number >= 0`, `${id}: ${f} deve ser numero >= 0`);
+    for (const f of NUM_FIELDS) if (m[f] !== undefined && !(typeof m[f] === 'number' && Number.isFinite(m[f]) && m[f] >= 0)) return tr(`${id}: ${f} must be a number >= 0 (missing field = unknown)`, `${id}: ${f} deve ser numero >= 0 (campo ausente = desconhecido)`);
+    if (typeof m.source !== 'string' || !/^https:\/\//.test(m.source)) return tr(`${id}: source (https) is required`, `${id}: source (https) obrigatorio`);
+    if (typeof m.read !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(m.read)) return tr(`${id}: read (date yyyy-mm-dd) is required`, `${id}: read (data yyyy-mm-dd) obrigatorio`);
   }
   return null;
 }
@@ -48,13 +49,13 @@ export async function fetchSource(source, { fetchImpl = globalThis.fetch, timeou
   if (/^https?:\/\//i.test(source)) {
     const u = new URL(source);
     const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname);
-    if (u.protocol !== 'https:' && !loopback) throw new Error('fonte remota precisa ser https');
+    if (u.protocol !== 'https:' && !loopback) throw new Error(tr('remote source must be https', 'fonte remota precisa ser https'));
     const r = await fetchImpl(source, { signal: AbortSignal.timeout(timeoutMs), redirect: 'follow' });
-    if (!r.ok) throw new Error(`HTTP ${r.status} ao baixar ${source}`);
+    if (!r.ok) throw new Error(tr(`HTTP ${r.status} while downloading ${source}`, `HTTP ${r.status} ao baixar ${source}`));
     raw = await r.text();
   } else raw = readFileSync(source, 'utf8');
-  if (Buffer.byteLength(raw) > maxBytes) throw new Error('tabela grande demais (> 1 MB)');
-  let t; try { t = JSON.parse(raw); } catch { throw new Error('fonte nao e JSON valido'); }
+  if (Buffer.byteLength(raw) > maxBytes) throw new Error(tr('table too large (> 1 MB)', 'tabela grande demais (> 1 MB)'));
+  let t; try { t = JSON.parse(raw); } catch { throw new Error(tr('source is not valid JSON', 'fonte nao e JSON valido')); }
   return { raw, table: t };
 }
 

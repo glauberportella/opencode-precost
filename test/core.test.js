@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPrices, priceAt, costCalls } from '../src/pricing.js';
 import { simulateCalls, totalsOf, estimate, quantile, range } from '../src/estimate.js';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 
 const prices = loadPrices();
 

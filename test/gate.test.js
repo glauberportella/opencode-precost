@@ -4,6 +4,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { decide } from '../src/gate.js';
+process.env.PRECOST_LANG = 'pt'; // this suite asserts the Portuguese text; English is covered in i18n.test.js
 
 const cfg = { model: 'gemini-4-neon', limitUsd: 0.5, ttlMin: 10 };
 const mk = () => join(mkdtempSync(join(tmpdir(), 'g-')), 'st');
