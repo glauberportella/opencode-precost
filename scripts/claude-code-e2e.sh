@@ -16,7 +16,7 @@ JSON
 echo '{"model":"claude-opus-5.5","limitUsd":5}' > $W/cfg.json   # config DIVERGE do modelo real (sonnet) de proposito
 export PRECOST_CONFIG=$W/cfg.json PRECOST_STATE=$W/state
 SID=$(python3 -c 'import uuid;print(uuid.uuid4())'); FAIL=0; P="Refactor the whole payments module and rewrite all the tests"
-calls(){ [ -f $W/mock-model-calls.log ] && wc -l < $W/mock-model-calls.log || echo 0; }
+calls(){ [ -f $W/mock-model-calls.log ] && wc -l < $W/mock-model-calls.log | tr -d " " || echo 0; }
 export ANTHROPIC_MODEL=claude-sonnet-5.5   # modelo efetivo do Claude; o config diverge de proposito (opus) => fontes declaradas em CONFLITO => nao comprovado
 run(){ timeout 90 $CC -p "$1" --settings $W/settings.json "${@:2}" > $W/out.txt 2> $W/err.txt; }
 chk(){ [ "$2" = "$3" ] || { echo "FALHOU ($1): esperado '$3', obtido '$2'"; FAIL=1; }; }
@@ -30,7 +30,7 @@ run "$P" --resume $SID; chk "4 uso unico: bloqueia de novo" "$(has x 'BLOCKED')"
 chk "4 transcript e so observado: ainda nao comprovado (conflito com config opus)" "$(has x 'transcript (last response')" sim; chk "4 pior caso, nao silencia" "$(has x 'MODEL NOT PROVEN')" sim
 run "precost estimate fix a bug" --resume $SID; chk "5 estimate nao chama modelo" "$(calls)" 1; chk "5 previa" "$(has x 'Nothing was sent to the model')" sim
 SID2=$(python3 -c 'import uuid;print(uuid.uuid4())')
-run "$P" --session-id $SID2 --model claude-opus-5.5; chk "6 --model do processo e observado (nao prova)" "$(has x '--model flag of the claude process')" sim; chk "6 ainda nao comprovado" "$(has x 'NOT PROVEN')" sim
+run "$P" --session-id $SID2 --model claude-opus-5.5; if [ "$(uname -s)" = Linux ]; then chk "6 --model do processo e observado (nao prova)" "$(has x '--model flag of the claude process')" sim; else chk "6 fonte de processo (/proc) so existe no Linux: nao aparece aqui" "$(has x '--model flag of the claude process')" nao; fi; chk "6 ainda nao comprovado" "$(has x 'NOT PROVEN')" sim
 SID3=$(python3 -c 'import uuid;print(uuid.uuid4())')
 PRECOST_MODEL=claude-opus-5.5 run "$P" --session-id $SID3; chk "7 PRECOST_MODEL comprova" "$(has x 'env PRECOST_MODEL')" sim; chk "7 sem pior caso" "$(has x 'NOT PROVEN')" nao
 pkill -f mock-anthropic.mjs || true

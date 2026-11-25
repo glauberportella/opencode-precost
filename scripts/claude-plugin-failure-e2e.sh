@@ -9,7 +9,7 @@ R="$(cd "$(dirname "$0")/.." && pwd)"; W=$(mktemp -d); export MOCKDIR=$W HOME=$W
 mkdir -p $HOME $CLAUDE_CONFIG_DIR $W/proj; cd $W/proj; CC="${CLAUDE_BIN:-npx --yes @anthropic-ai/claude-code@2.1.332}"
 (node "$R/scripts/mock-anthropic.mjs" >/dev/null 2>&1 &); sleep 1
 echo '{"model":"claude-sonnet-5.5","limitUsd":5}' > $W/cfg.json
-calls(){ [ -f $W/mock-model-calls.log ] && wc -l < $W/mock-model-calls.log || echo 0; }
+calls(){ [ -f $W/mock-model-calls.log ] && wc -l < $W/mock-model-calls.log | tr -d " " || echo 0; }
 FAIL=0; chk(){ [ "$2" = "$3" ] || { echo "FALHOU ($1): esperado '$3', obtido '$2'"; FAIL=1; }; }
 variant(){ # $1 nome, $2 comando, $3 args JSON, $4 timeout, $5 onFailure
   D=$W/plug-$1; mkdir -p $D; cp -r $R/.claude-plugin $R/adapters $R/src $R/data $R/package.json $D/ 2>/dev/null; mkdir -p $D/hooks

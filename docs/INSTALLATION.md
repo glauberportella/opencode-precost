@@ -77,6 +77,8 @@ node bin/precost.js doctor [--project DIR] [--claude-settings FILE]
 - Worst-case model = highest price in the supported catalog. It is a label, not a guarantee.
 - Not verified: a real invoice, `PostModelSwitch` in your install, subagents and scheduled runs, raw Carbon/Argon price (inferred).
 
+> Model detection from the `--model` flag of the claude process reads `/proc`, so it works on Linux only. On macOS and Windows that source is simply absent: the gate then relies on the other sources (tracker, transcript, declared model, `PRECOST_MODEL`) and otherwise uses the worst case, which is the safe direction.
+
 ## Hook failure in the Claude Code plugin (Linux)
 
 `npm run e2e:claude-plugin-failure` (real Claude Code 2.1.332, `--plugin-dir`, fake server, no spend): a script crash, a missing `node` and a hook timeout do NOT let the prompt reach the model (`onFailure: block`). Negative control: with `onFailure: continue` the prompt goes through.

@@ -7,6 +7,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: [20, 22]
+        include:
+          # macOS Intel (x64) como segunda via: os runners macOS arm64 muitas vezes nao sao adquiridos (capacidade).
+          - { os: macos-15-intel, node: 22 }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +35,7 @@ jobs:
   e2e-native:
     strategy:
       fail-fast: false
-      matrix: { os: [ubuntu-latest, macos-latest, windows-latest] }
+      matrix: { os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest] }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     steps:
