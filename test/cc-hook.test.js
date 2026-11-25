@@ -157,3 +157,14 @@ test('arquivo ignorado (segredo/grande): mudar o conteudo invalida a aprovacao p
   run(`precost approve ${codeOf(run('veja @.env'))}`);
   assert.equal(run('veja @.env').decision, undefined); // controle positivo
 });
+test('regressao: sem config/limite os comandos precost continuam interceptados e nada vai ao modelo', () => {
+  const r = (prompt) => JSON.parse(spawnSync('node', [hook], { input: JSON.stringify({ session_id: 's', prompt }), env: { ...process.env, PRECOST_CONFIG: '/nao/existe', PRECOST_STATE: mkenv({}).st }, encoding: 'utf8' }).stdout);
+  for (const c of ['precost estimate x', 'precost last', 'precost approve deadbeef', 'precost revoke all']) assert.equal(r(c).decision, 'block', c);
+  assert.equal(r('prompt comum').decision, undefined);
+});
+test('regressao: precost last e escopado por sessao (nao mostra codigo de outra sessao)', () => {
+  const e = mkenv(CFG);
+  const code = codeOf(submit(e, 'tarefa A', 's1'));
+  assert.match(submit(e, 'precost last', 's1').reason, new RegExp(code));
+  const o = submit(e, 'precost last', 's2'); assert.doesNotMatch(o.reason, new RegExp(code)); assert.match(o.reason, /nesta sessao/);
+});

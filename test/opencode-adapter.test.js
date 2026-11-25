@@ -91,3 +91,28 @@ test('historico do plugin so usa sessoes do mesmo modelo e projeto; mistura nao 
   const other = await est('/proj/b');
   assert.match(other, /base: premissas/); // outro projeto: sem historico
 });
+
+test('regressao: partes so com arquivo (sem texto) passam pelo gate; vazio sem arquivo nao', async () => {
+  const { d, p } = await gate();
+  writeFileSync(join(d, 'g.txt'), 'z'.repeat(900_000));
+  const fp = { type: 'file', url: new URL(`file://${d}/g.txt`).href, mime: 'text/plain' };
+  const e = await blockedWith(p, { sessionID: 's1', model: { modelID: 'gemini-3.5-flash' } }, { parts: [fp] });
+  assert.match(e.message, /BLOQUEADO/); assert.match(e.message, /g\.txt \(900000 bytes\)/);
+  assert.equal(await blockedWith(p, { sessionID: 's1', model: { modelID: 'gemini-3.5-flash' } }, { parts: [] }), null);
+});
+test('regressao: comandos precost sao interceptados SEMPRE (sem limitUsd tambem) e prompt comum passa', async () => {
+  const { p } = await gate({ limitUsd: undefined });
+  for (const c of ['precost estimate tarefa x', 'precost last', 'precost approve deadbeef', 'precost revoke all']) {
+    const e = await blockedWith(p, ...msg(c)); assert.ok(e, c); assert.equal(e.precostDeny, true);
+  }
+  assert.match((await blockedWith(p, ...msg('precost estimate tarefa x'))).message, /Nada foi enviado ao modelo/);
+  assert.equal(await blockedWith(p, ...msg('prompt comum')), null);
+});
+test('regressao: comparacao nao mistura historico entre modelos; cada linha usa o seu', async () => {
+  const d = mkdtempSync(join(tmpdir(), 'oc-c-')); const hp = join(d, 'h.json');
+  const P = () => PrecostPlugin({ directory: '/proj/a' }, { historyPath: hp, models: ['gemini-3.5-flash', 'gemini-3.5-flash-lite'] });
+  const p0 = await P();
+  for (let i = 0; i < 5; i++) await p0.event({ event: { type: 'message.updated', properties: { info: { id: `x${i}`, sessionID: `x${i}`, role: 'assistant', modelID: 'gemini-3.5-flash', time: { created: 1, completed: 2 }, cost: 0, tokens: { input: 1000, output: 10, reasoning: 0, cache: { read: 0, write: 0 } } } } } });
+  const r = await (await P()).tool.precost_estimate.execute({ task: 'x' }, {}); const out = String(r.output ?? r);
+  assert.match(out, /gemini-3\.5-flash \[base: historico\]/); assert.match(out, /gemini-3\.5-flash-lite \[base: premissas\]/);
+});

@@ -5,8 +5,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { decide } from '../../src/gate.js';
-import { filesFromPrompt } from '../../src/context.js';
 
 const block = (text) => { process.stdout.write(JSON.stringify({ decision: 'block', reason: text, hookSpecificOutput: { hookEventName: 'UserPromptSubmit', suppressOriginalPrompt: true } })); process.exit(0); };
 const stateDir = process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost');
@@ -31,6 +29,8 @@ model ??= config.model;
 
 let d;
 try {
+  const { decide } = await import('../../src/gate.js'); // import dinamico: falha de carga vira falha FECHADA (com limite), nao saida nao-bloqueante
+  const { filesFromPrompt } = await import('../../src/context.js');
   const root = ev.cwd ?? process.cwd();
   d = decide({ prompt: ev.prompt ?? '', model, session: ev.session_id, config, stateDir, files: filesFromPrompt(ev.prompt ?? '', root) });
 } catch (e) { failure(`erro interno (${e.message})`); }

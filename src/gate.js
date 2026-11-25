@@ -19,6 +19,9 @@ const PREVIEW = /^\s*precost\s+(?:estimate|preview)\s+([\s\S]+)$/i;
 const LAST = /^\s*precost\s+last\s*$/i;
 const REVOKE = /^\s*precost\s+revoke\s+([0-9a-f]{8}|all)\s*$/i;
 
+export const isCommand = (p) => LAST.test(p) || PREVIEW.test(p) || REVOKE.test(p) || APPROVE.test(p);
+const lastFile = (session) => `last-block-${createHash('sha256').update(String(session ?? 'global')).digest('hex').slice(0, 12)}.txt`;
+
 export function bindingHash({ prompt, model, session, pricesHash, limit, maxUsd, ctx = '' }) {
   const max = Number.isFinite(maxUsd) ? Math.round(maxUsd * 1e6) : 'sem-limite-conhecido';
   return createHash('sha256').update(JSON.stringify([prompt, model ?? null, session ?? null, pricesHash, limit, max, ctx])).digest('hex');
@@ -42,7 +45,7 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
 
   let m;
   if (LAST.test(prompt)) {
-    let t = 'precost: sem bloqueio registrado.'; try { t = readFileSync(join(stateDir, 'last-block.txt'), 'utf8'); } catch { /* nenhum */ }
+    let t = 'precost: sem bloqueio registrado nesta sessao.'; try { t = readFileSync(join(stateDir, lastFile(session)), 'utf8'); } catch { /* nenhum */ }
     return { action: 'block', text: t, command: 'last' };
   }
   if ((m = PREVIEW.exec(prompt))) { // previa sob demanda: digitada pelo usuario, nunca chega ao modelo, sem gasto
@@ -107,6 +110,6 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   const code = randomBytes(4).toString('hex');
   writeFileSync(join(stateDir, `pending-${code}.json`), JSON.stringify({ binding, code, session: session ?? null, expiresAt: now + ttl }));
   const out = text + `\n\nBLOQUEADO: ${reason}. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo, com estes precos e estes arquivos, digite exatamente: precost approve ${code} (vale ${config.ttlMin ?? 10} min, uso unico; desfaz com precost revoke ${code}). Depois reenvie o prompt sem alteracao. Isto nao limita o gasto durante a tarefa.`;
-  writeFileSync(join(stateDir, 'last-block.txt'), out);
+  writeFileSync(join(stateDir, lastFile(session)), out);
   return { action: 'block', code, text: out, res };
 }

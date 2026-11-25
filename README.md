@@ -5,7 +5,7 @@ Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes 
 ## Instalar e testar (reproduzivel)
 ```
 npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)
-npm test          # 38 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
+npm test          # 45 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
 npm run e2e:opencode   # servidor OpenCode 1.19.6 real, sem modelo pago (baixa opencode-ai@1.19.6 via npx)
 ```
 

@@ -10,7 +10,7 @@ export function format(result, { title = 'Previa de custo (ESTIMATIVA)' } = {}) 
   for (const r of result.rows) {
     if (r.error) { L.push(`- ${r.model}: ${r.error}`); continue; }
     const g = range(r);
-    L.push(`- ${r.model}: contexto inicial ~${usd(r.initialContextEstUsd)} (estimado); tarefa ${r.lowerBound ? 'AO MENOS ' : ''}${usd(g.min)} a ${usd(g.max)}${r.lowerBound ? ' (so limite inferior, taxa de contexto longo desconhecida)' : ''} (meio ${usd(g.mid)}; o valor alto e P75/cenario grande, NAO e teto)` + (r.notes.length ? ` [${r.notes.join('; ')}]` : ''));
+    L.push(`- ${r.model}${result.basis.kind === 'mista' ? ` [base: ${r.basis.kind}]` : ''}: contexto inicial ~${usd(r.initialContextEstUsd)} (estimado); tarefa ${r.lowerBound ? 'AO MENOS ' : ''}${usd(g.min)} a ${usd(g.max)}${r.lowerBound ? ' (so limite inferior, taxa de contexto longo desconhecida)' : ''} (meio ${usd(g.mid)}; o valor alto e P75/cenario grande, NAO e teto)` + (r.notes.length ? ` [${r.notes.join('; ')}]` : ''));
     const pb = promoBenefit(r);
     if (pb) L.push(`  cobranca acima = BRUTA INFERIDA (preco de lista pos-promocao; sem validacao em fonte primaria de faturamento: estimativa conservadora, nao cobranca exata). Beneficio condicional ate ${pb.until}: ${pb.pct}% de creditos de volta sobre gasto liquido (ate ~${usd(pb.minUsd)} a ${usd(pb.maxUsd)}), se aplicavel a conta. Nao e desconto na fatura; o gate usa o valor bruto.`);
   }

@@ -31,7 +31,7 @@ export function totalsOf(calls) {
 
 function fromHistory(history) {
   const col = (k) => history.map((h) => h[k] ?? 0).sort((a, b) => a - b);
-  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)), cacheWrite: Math.round(quantile(col('cache_write'), q)), turns: Math.max(1, Math.round(quantile(col('turns'), q))), peak: history.every((h) => typeof h.peakCtx === 'number') ? Math.round(quantile(col('peakCtx'), q)) : undefined });
+  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)), cacheWrite: Math.round(quantile(col('cache_write'), q)), turns: Math.max(1, Math.round(quantile(col('turns'), q))), peak: history.every((h) => typeof h.peakCtx === 'number') ? Math.max(...history.map((h) => h.peakCtx)) : undefined /* MAIOR pico registrado, nao quantil */ });
   return { low: pick(0.25), mid: pick(0.5), high: pick(0.75) };
 }
 
@@ -43,11 +43,12 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
   const threshold = prices.long_context_threshold_tokens ?? 200000;
 
   // Cenarios por modelo: o multiplicador de tokenizador (Claude 4.7+, ~30%) so afeta os tokens observados (prompt/arquivos), nao a premissa de sistema.
-  const hasHist = history && history.length >= 5;
-  const build = (mult) => {
+  // history: lista (vale para todas as linhas) ou mapa {modelo: lista} (cada linha usa so o seu; sem mistura entre modelos comparados).
+  const histOf = (model) => (Array.isArray(history) ? history : history?.[model]);
+  const build = (mult, hist) => {
     const pT = Math.round(promptTokens * mult), fT = Math.round(fileTokens * mult);
-    if (hasHist) {
-      const sc = fromHistory(history);
+    if (hist && hist.length >= 5) {
+      const sc = fromHistory(hist);
       for (const s of Object.values(sc)) s.freshIn += pT + fT; // entrada observada desta tarefa somada uma vez
       return sc;
     }
@@ -55,9 +56,9 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     for (const [name, k] of Object.entries(DEFAULT_SCENARIOS)) sc[name] = simulateCalls({ base: pT + fT + systemTokens, ...k, cacheHit });
     return sc;
   };
-  const basis = hasHist
-    ? { kind: 'historico', sessions: history.length, note: 'P25/P50/P75 de sessoes anteriores informadas (mesmo modelo e projeto, filtradas pelo adaptador), mais a entrada observada desta tarefa somada uma vez; o historico nao depende do tamanho da tarefa alem disso. Semantica input/cache dos eventos reais NAO validada contra resposta de modelo' }
-    : { kind: 'premissas', note: history?.length ? `historico com ${history.length} sessoes (<5) ignorado` : 'sem historico: tres cenarios com premissas fixas, nao medidas', scenarios: DEFAULT_SCENARIOS, cacheHit };
+  const basisOf = (hist) => (hist && hist.length >= 5
+    ? { kind: 'historico', sessions: hist.length, note: 'P25/P50/P75 de sessoes anteriores deste modelo e projeto, mais a entrada observada desta tarefa somada uma vez; pico por chamada = MAIOR registrado; o historico nao depende do tamanho da tarefa alem disso. Semantica input/cache dos eventos reais NAO validada contra resposta de modelo' }
+    : { kind: 'premissas', note: hist?.length ? `historico com ${hist.length} sessoes (<5) ignorado` : 'sem historico: tres cenarios com premissas fixas, nao medidas', scenarios: DEFAULT_SCENARIOS, cacheHit });
 
   const rows = models.map((model) => {
     const price = priceAt(prices, model, date);
@@ -65,7 +66,8 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     const scenarios = {}, notes = [];
     let lowerBound = false;
     const mult = price.tokenizer_multiplier ?? 1;
-    const scen = build(mult);
+    const hist = histOf(model);
+    const scen = build(mult, hist);
     const base = Math.round(promptTokens * mult) + Math.round(fileTokens * mult) + systemTokens;
     for (const [name, u] of Object.entries(scen)) {
       const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u, threshold);
@@ -80,8 +82,10 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     if (price.cache_write) notes.push(`cache write (US$${price.cache_write}/1M a partir de ${price.cache_write_from}) nao modelado`);
     const initialUsd = costCalls(price, [{ ctx: base, cachedIn: 0, out: 0 }], threshold).usd;
     const promoActive = price.promo ? { ...price.promo } : null;
-    return { model, lowerBound, promo: promoActive, price: { input: price.input, output: price.output, cache_read: price.cache_read ?? null }, initialContextEstUsd: initialUsd, scenarios, notes: [...new Set(notes)] };
+    return { model, basis: basisOf(hist), lowerBound, promo: promoActive, price: { input: price.input, output: price.output, cache_read: price.cache_read ?? null }, initialContextEstUsd: initialUsd, scenarios, notes: [...new Set(notes)] };
   });
+  const ok = rows.filter((r) => !r.error), kinds = new Set(ok.map((r) => r.basis.kind));
+  const basis = kinds.size === 1 ? ok[0].basis : kinds.size === 0 ? basisOf(undefined) : { kind: 'mista', note: 'ver a base de cada modelo abaixo (historico so onde ha 5+ sessoes do proprio modelo e projeto)' };
   return { tokenMethod: TOKEN_METHOD, initial, basis, rows, pricesHash: prices._hash ?? null };
 }
 

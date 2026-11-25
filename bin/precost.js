@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -8,7 +8,7 @@ import { estimate } from '../src/estimate.js';
 import { format } from '../src/format.js';
 
 if (process.argv[2] === 'last') { // ultima mensagem de bloqueio (UX quando o cliente so mostra erro generico)
-  try { console.log(readFileSync(join(process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'), 'last-block.txt'), 'utf8')); } catch { console.log('precost: sem bloqueio registrado.'); }
+  try { console.log((() => { const d = process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'); const fs = readdirSync(d).filter((f) => /^last-block-/.test(f)).map((f) => [f, statSync(join(d, f)).mtimeMs]).sort((a, b) => b[1] - a[1]); return fs.length ? '(ultimo bloqueio de qualquer sessao: ' + fs[0][0] + ')\n' + readFileSync(join(d, fs[0][0]), 'utf8') : (() => { throw 0; })(); })()); } catch { console.log('precost: sem bloqueio registrado.'); }
   process.exit(0);
 }
 if (process.argv[2] === 'estimate' && process.argv[3] && !process.argv[3].startsWith('--')) { // precost estimate "tarefa" [--model m]: usa model do config se existir

@@ -96,3 +96,15 @@ test('Claude: multiplicador de tokenizador so nos tokens observados; cache write
   const c = costCalls(priceAt(prices, 'claude-sonnet-5.5'), [{ ctx: 1_000_000, cachedIn: 0, out: 0 }]).usd;
   assert.ok(Math.abs(c - 2.5) < 1e-9); // 2,50 (write 5min), nao 2,00
 });
+
+test('regressao: pico historico usa o MAIOR registrado, nao o P75', () => {
+  const h = [100_000, 100_000, 100_000, 100_000, 900_000].map((p) => ({ input: 1_000_000, output: 1000, cache_read: 0, turns: 20, peakCtx: p }));
+  assert.equal(estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: h }).rows[0].lowerBound, true); // P75 seria 100K (abaixo do limiar)
+  const ok = h.map((x) => ({ ...x, peakCtx: 150_000 }));
+  assert.equal(estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: ok }).rows[0].lowerBound, false); // controle positivo
+});
+test('regressao: mapa de historico por modelo (linhas comparadas nao se misturam)', () => {
+  const h = Array.from({ length: 5 }, () => ({ input: 100_000, output: 1000, cache_read: 0, turns: 5, peakCtx: 30_000 }));
+  const r = estimate({ task: 'x', models: ['gemini-3.5-flash', 'gemini-3.5-flash-lite'], prices, history: { 'gemini-3.5-flash': h } });
+  assert.equal(r.rows[0].basis.kind, 'historico'); assert.equal(r.rows[1].basis.kind, 'premissas'); assert.equal(r.basis.kind, 'mista');
+});

@@ -10,7 +10,7 @@ import { loadPrices } from '../../src/pricing.js';
 import { estimate } from '../../src/estimate.js';
 import { format } from '../../src/format.js';
 import { SessionLedger } from '../../src/history.js';
-import { decide, validateConfig } from '../../src/gate.js';
+import { decide, validateConfig, isCommand } from '../../src/gate.js';
 import { filesFromParts } from '../../src/context.js';
 
 export const PINNED_OPENCODE = '1.19.6';
@@ -21,8 +21,9 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
   const models = options.models ?? Object.keys(prices.models);
   const ledger = new SessionLedger(options.historyPath ?? join(homedir(), '.local', 'share', 'precost', 'sessions.json'));
   const histFor = (modelID) => ledger.list().filter((s) => s.turns > 0 && s.model && s.model === modelID && s.project === input.directory).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, cache_write: s.cache_write, turns: s.turns, peakCtx: s.peakCtx }));
+  const histMap = (ms) => Object.fromEntries(ms.map((m) => [m, histFor(m)]));
   const run = (task) => {
-    const hist = histFor(models[0]);
+    const hist = histMap(models);
     return format(estimate({ task, models, prices, history: hist, cacheHit: options.cacheHit ?? 0 }));
   };
   let cachedVersion;
@@ -54,6 +55,11 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
       const text = (output.parts ?? []).filter((p) => p.type === 'text').map((p) => p.text).join('\n');
       const deny = async (msg) => { try { await client?.tui?.showToast?.({ body: { message: msg.slice(0, 600), variant: 'warning' } }); } catch { /* sem TUI */ } const err = new Error(msg); err.precostDeny = true; throw err; };
       try {
+        const root0 = input.directory ?? process.cwd();
+        if (isCommand(text)) { // comandos do usuario: SEMPRE interceptados (nunca chegam ao modelo), com ou sem limite
+          const c = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
+          return await deny(c.text);
+        }
         if (!gated) { if (text && options.log) options.log(run(text)); return; }
         const bad = validateConfig(options);
         if (bad) return await deny(`precost: configuracao invalida (${bad}). Bloqueado (falha fechada).`);
@@ -61,9 +67,11 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
           const v = await version(inp);
           if (v !== PINNED_OPENCODE) return await deny(`precost: versao do OpenCode ${v ?? 'nao identificada'} difere da verificada (${PINNED_OPENCODE}); o bloqueio por throw e comportamento nao documentado. Bloqueado (falha fechada). Valide com npm run e2e:opencode e use allowUnverifiedVersion:true por sua conta.`);
         }
-        if (!text) return;
-        const root = input.directory ?? process.cwd();
-        const d = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, files: filesFromParts(output.parts, root), config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histFor(inp.model?.modelID) });
+        const root = root0;
+        const fileParts = filesFromParts(output.parts, root);
+        if (!text && fileParts.length === 0) return; // sem texto e sem arquivo: nada a avaliar
+
+        const d = decide({ prompt: text ?? '', model: inp.model?.modelID, session: inp.sessionID, files: fileParts, config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histMap([inp.model?.modelID, ...(options.compare ?? [])].filter(Boolean)) });
         if (options.log) options.log(d.text);
         if (d.action === 'allow') return;
         return await deny(d.text);
