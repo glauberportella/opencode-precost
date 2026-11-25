@@ -116,3 +116,19 @@ test('regressao: comparacao nao mistura historico entre modelos; cada linha usa 
   const r = await (await P()).tool.precost_estimate.execute({ task: 'x' }, {}); const out = String(r.output ?? r);
   assert.match(out, /gemini-3\.5-flash \[base: historico\]/); assert.match(out, /gemini-3\.5-flash-lite \[base: premissas\]/);
 });
+
+test('regressao do revisor: mesmo ledger (3.7 ~10k, 3.8 ~400k) em tool, gate com compare e preview: cada modelo usa so o seu historico', async () => {
+  const d = mkdtempSync(join(tmpdir(), 'oc-r-')); const hp = join(d, 'h.json');
+  const mkp = (opt = {}) => PrecostPlugin({ directory: '/proj/a' }, { historyPath: hp, stateDir: join(d, 'st'), version: '1.19.6', models: ['gemini-3.7-flash', 'gemini-3.8-flash'], compare: ['gemini-3.8-flash'], ...opt });
+  const p0 = await mkp();
+  const ev = (id, model, n) => p0.event({ event: { type: 'message.updated', properties: { info: { id, sessionID: id, role: 'assistant', modelID: model, time: { created: 1, completed: 2 }, cost: 0, tokens: { input: n, output: 100, reasoning: 0, cache: { read: 0, write: 0 } } } } } });
+  for (let i = 0; i < 6; i++) { await ev(`a${i}`, 'gemini-3.7-flash', 10_000); await ev(`b${i}`, 'gemini-3.8-flash', 400_000); }
+  const usdOf = (txt, model) => { const m = new RegExp(`- ${model.replace('.', '\\.')}[^\\n]*?tarefa (?:AO MENOS )?US\\$([0-9.]+)`).exec(txt); assert.ok(m, `sem linha de ${model} em: ${txt.slice(0, 600)}`); return Number(m[1]); };
+  const tr = await (await mkp()).tool.precost_estimate.execute({ task: 'x' }, {}); const t = String(tr.output ?? tr);
+  const g = (await blockedWith(await mkp({ limitUsd: 0.0001 }), { sessionID: 's9', model: { modelID: 'gemini-3.7-flash' } }, { parts: [{ type: 'text', text: 'x' }] })).message;
+  const pv = (await blockedWith(await mkp({ limitUsd: 0.0001 }), { sessionID: 's9', model: { modelID: 'gemini-3.7-flash' } }, { parts: [{ type: 'text', text: 'precost estimate x' }] })).message;
+  for (const out of [t, g, pv]) {
+    assert.ok(usdOf(out, 'gemini-3.8-flash') > 20 * usdOf(out, 'gemini-3.7-flash'), out.slice(0, 400)); // 3.8 (400k) bem acima de 3.7 (10k)
+    assert.match(out, /base: historico/); assert.doesNotMatch(out, /base: premissas/);
+  }
+});

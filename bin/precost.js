@@ -26,5 +26,6 @@ if (!task) { console.error('uso: precost --task "..." [--file f]... [--model m].
 const prices = loadPrices(values.prices);
 const models = values.model ?? Object.keys(prices.models);
 const history = values.history ? JSON.parse(readFileSync(values.history, 'utf8')) : undefined;
+if (Array.isArray(history) && models.length > 1) { console.error('precost: --history como lista vale para UM modelo; para comparar varios use um mapa {"modelo": [sessoes]} (cada linha usa so o seu historico).'); process.exit(2); }
 const res = estimate({ task, fileTexts: (values.file ?? []).map((f) => readFileSync(f, 'utf8')), models, prices, history, cacheHit: Number(values['cache-hit'] ?? 0), date: values.date });
 console.log(values.json ? JSON.stringify(res, null, 2) : format(res));

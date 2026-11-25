@@ -49,7 +49,7 @@ Reenviar o mesmo prompt nao aprova. Para aprovar: digitar `precost approve CODIG
 - **Historico filtrado:** so sessoes do mesmo modelo e do mesmo projeto (diretorio) entram; sessao com varios modelos fica fora. `cache_write` agora e registrado e custeado. Semantica de `input` vs `cache` dos eventos reais nao validada (nenhuma resposta de modelo observada).
 - **Arquivos ignorados** (segredo, grande): o conteudo nao e lido; a aprovacao e vinculada a assinatura tamanho+mtime. Mudanca que preserve tamanho e mtime nao e detectada (limite declarado).
 - **UX:** canal verificado = terminal (`precost estimate`, `precost last`). Comandos no prompt: contrato lido (Claude Code) e erro+toast (OpenCode) sem evidencia de TUI/UI real de que o texto aparece.
-- **Reproducao:** `npm ci && npm test` (45 testes); sem `npm ci` o teste do adaptador OpenCode falha por dependencia ausente.
+- **Reproducao:** `npm ci && npm test` (47 testes); sem `npm ci` o teste do adaptador OpenCode falha por dependencia ausente.
 
 ## Atualizacao 4 (correcoes da revisao 8f5f7a3)
 - Prompt so com arquivo (sem texto) passa pelo gate no OpenCode. Comandos `precost estimate|last|approve|revoke` sao interceptados SEMPRE (OpenCode e Claude Code, com ou sem `limitUsd`/config), nunca chegam ao modelo.
@@ -57,4 +57,7 @@ Reenviar o mesmo prompt nao aprova. Para aprovar: digitar `precost approve CODIG
 - Historico por modelo em cada linha (`history` aceita mapa `{modelo: sessoes}`); linhas comparadas nao se misturam; base mista e rotulada por linha.
 - `precost last` escopado por sessao (arquivo por sessao); a CLI de terminal mostra o mais recente de qualquer sessao e diz isso.
 - Hook do Claude Code: carga dos modulos por import dinamico; falha de carga com limite configurado bloqueia (antes um erro de modulo sairia nao-bloqueante).
-- Escopo: recorte de prova de conceito local, nao produto pronto nem seguranca forte. 45 testes.
+- Escopo: recorte de prova de conceito local, nao produto pronto nem seguranca forte. 47 testes.
+
+## Atualizacao 5
+- Regressao do revisor (ledger com 3.7 ~10k e 3.8 ~400k, mesmo projeto): tool, gate com compare e preview usam o historico de cada modelo (3.8 >20x 3.7 nos tres caminhos). A CLI recusa `--history` em lista quando ha varios modelos (exige mapa por modelo). 47 testes.
