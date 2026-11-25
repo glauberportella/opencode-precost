@@ -31,7 +31,7 @@ export function totalsOf(calls) {
 
 function fromHistory(history) {
   const col = (k) => history.map((h) => h[k] ?? 0).sort((a, b) => a - b);
-  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)) });
+  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)), turns: Math.max(1, Math.round(quantile(col('turns'), q))) });
   return { low: pick(0.25), mid: pick(0.5), high: pick(0.75) };
 }
 
@@ -61,9 +61,9 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
     const scenarios = {}, notes = [];
     let lowerBound = false;
     for (const [name, u] of Object.entries(scen)) {
-      const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u);
+      const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u, threshold);
       scenarios[name] = { usd: c.usd, tokens: Array.isArray(u) ? totalsOf(u) : u };
-      if (c.longUnknown) lowerBound = true;
+      if (c.longUnknown === true) lowerBound = true;
       if (!c.cacheKnown) notes.push('sem preco de cache na tabela: entrada em cache cobrada a preco cheio (limite superior)');
       if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : 'contexto acima do limiar: tabela nao traz taxa longa (desconhecido)');
     }

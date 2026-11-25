@@ -36,3 +36,9 @@ Reenviar o mesmo prompt nao aprova. Para aprovar: digitar `precost approve CODIG
 - **Contexto longo:** `long_context` = `none` (pagina sem faixa), objeto (3.1 Pro, Haiku 5.5 a 100K) ou `unknown` (Gemini 4: so limite inferior, exige aprovacao).
 - **Precos Claude** (platform.claude.com/docs/en/about-claude/pricing, lido 25/nov/2026): Fable 5.2, Opus 5.5, Sonnet 5.5, Haiku 5.5 (faixa a 100K), Sonnet 4.6, Opus 4.5, Haiku 4.5. Nao modelados: cache write, Batch, Fast mode, residencia de dados (1,1x). Tokenizador 4.7+ gera ~30% mais tokens: chars/4 subestima.
 - **Ledger:** dedup por id de mensagem agora persiste em disco (nao duplica gasto apos reinicio).
+
+## Atualizacao 2 (comandos e historico)
+- **Comandos digitados pelo usuario, sem modelo e sem gasto** (OpenCode `chat.message` e Claude Code hook): `precost estimate <texto da tarefa>` mostra a previa; `precost last` mostra o ultimo bloqueio completo; `precost approve CODIGO` / `precost revoke CODIGO|all`. Previa nunca aprova nada. Nao e um slash command nativo (`/precost` segue pendente).
+- **Historico agregado e limiar por chamada:** o limiar de contexto longo vale por chamada. Com historico, usa-se a media de tokens por chamada (entrada+cache / turnos). Media acima do limiar = limite inferior; abaixo = so nota de que o pico por chamada e desconhecido (nao soma todos os turnos).
+- **Preco bruto de Carbon/Argon e INFERIDO** (4/20 = preco pos-promocao; a pagina so descreve 50% de creditos de volta). Sem validacao em fonte primaria de faturamento: estimativa conservadora, nunca "cobranca exata".
+- Limite fundamental mantido: estado em arquivos do mesmo usuario; agente com shell pode alterar. Nao e seguranca resolvida.

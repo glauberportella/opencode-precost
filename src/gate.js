@@ -15,6 +15,8 @@ import { contextHash } from './context.js';
 // LIMITE DE SEGURANCA (declarado): o estado fica em arquivos do mesmo usuario. Um agente com shell/escrita nesse usuario pode
 // forjar aprovacao. O gate protege contra gasto acidental e prompts grandes, NAO contra um agente que queira se autoaprovar.
 const APPROVE = /^\s*precost\s+approve\s+([0-9a-f]{8})\s*$/i;
+const PREVIEW = /^\s*precost\s+(?:estimate|preview)\s+([\s\S]+)$/i;
+const LAST = /^\s*precost\s+last\s*$/i;
 const REVOKE = /^\s*precost\s+revoke\s+([0-9a-f]{8}|all)\s*$/i;
 
 export function bindingHash({ prompt, model, session, pricesHash, limit, maxUsd, ctx = '' }) {
@@ -39,6 +41,15 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   const ttl = (config.ttlMin ?? 10) * 60_000;
 
   let m;
+  if (LAST.test(prompt)) {
+    let t = 'precost: sem bloqueio registrado.'; try { t = readFileSync(join(stateDir, 'last-block.txt'), 'utf8'); } catch { /* nenhum */ }
+    return { action: 'block', text: t, command: 'last' };
+  }
+  if ((m = PREVIEW.exec(prompt))) { // previa sob demanda: digitada pelo usuario, nunca chega ao modelo, sem gasto
+    let prices0; try { prices0 = loadPrices(config.prices); } catch (e) { return blockCfg(`tabela de precos ilegivel: ${e.message}`); }
+    const r0 = estimate({ task: m[1], models: [model, ...(config.compare ?? [])].filter(Boolean).length ? [model, ...(config.compare ?? [])].filter(Boolean) : Object.keys(prices0.models), prices: prices0, history, cacheHit: config.cacheHit ?? 0 });
+    return { action: 'block', command: 'preview', text: format(r0, { title: `Previa sob demanda (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'}). Nada foi enviado ao modelo.` }) };
+  }
   if ((m = REVOKE.exec(prompt))) {
     const want = m[1].toLowerCase();
     let n = 0;

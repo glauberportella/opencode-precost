@@ -77,3 +77,11 @@ test('resolucao de modelo Claude e limiar de 100K do Haiku 5.5', () => {
   const b = costCalls(priceAt(prices, 'claude-haiku-5.5'), [{ ctx: 100001, cachedIn: 0, out: 0 }]).usd;
   assert.ok(Math.abs(a - 0.01) < 1e-9); assert.ok(Math.abs(b - 0.0500005) < 1e-9);
 });
+test('historico agregado: limiar e por chamada (usa media por chamada), nao soma de todos os turnos', () => {
+  const mk = (turns, input) => Array.from({ length: 5 }, () => ({ input, output: 1000, cache_read: 0, turns }));
+  const many = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(100, 5_000_000) }); // 50K por chamada, 5M no total
+  assert.equal(many.rows[0].lowerBound, false);
+  assert.ok(many.rows[0].notes.some((n) => /pico de contexto por chamada desconhecido/.test(n)));
+  const big = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(10, 5_000_000) }); // 500K por chamada
+  assert.equal(big.rows[0].lowerBound, true);
+});

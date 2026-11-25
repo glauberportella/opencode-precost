@@ -49,8 +49,16 @@ export function costCalls(price, calls, defaultThreshold = 200000) {
 }
 
 // Custo de totais agregados (historico real): nao ha ctx por chamada, entao so a taxa base.
-export function costTotals(price, { freshIn, cachedIn = 0, out }) {
+export function costTotals(price, { freshIn, cachedIn = 0, out, turns }, defaultThreshold = 200000) {
+  const threshold = price.long_context_threshold ?? defaultThreshold;
   const cacheKnown = has(price.cache_read) || cachedIn === 0;
   const cachedRate = has(price.cache_read) ? price.cache_read : price.input;
-  return { usd: (freshIn * price.input + cachedIn * cachedRate + out * price.output) / 1e6, cacheKnown, longUnknown: (typeof price.long_context === 'object' || price.long_context === 'unknown') ? true : false };
+  // O limiar e POR CHAMADA: o total agregado nao diz o contexto de cada chamada. Usa a media por chamada (turns) como indicio:
+  // media acima do limiar = limite inferior; abaixo = so nota de que o pico por chamada e desconhecido.
+  let longUnknown = false;
+  if (typeof price.long_context === 'object' || price.long_context === 'unknown') {
+    const avg = turns > 0 ? (freshIn + cachedIn) / turns : null;
+    longUnknown = avg === null ? true : avg > threshold ? true : `agregado: pico de contexto por chamada desconhecido (media ${Math.round(avg)} tokens/chamada, abaixo do limiar de ${threshold}); faixa longa nao aplicada`;
+  }
+  return { usd: (freshIn * price.input + cachedIn * cachedRate + out * price.output) / 1e6, cacheKnown, longUnknown };
 }

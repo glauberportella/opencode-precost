@@ -138,3 +138,11 @@ test('stdin invalido: exit 0; sem config so avisa; com limite configurado bloque
   const r2 = spawnSync('node', [hook], { input: 'nao-json', encoding: 'utf8', env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st } });
   assert.equal(JSON.parse(r2.stdout).decision, 'block');
 });
+test('precost estimate/last: previa sob demanda sem modelo e sem aprovar nada', () => {
+  const e = mkenv(CFG);
+  const p = submit(e, 'precost estimate refatorar o modulo de pagamentos');
+  assert.equal(p.decision, 'block'); assert.match(p.reason, /Nada foi enviado ao modelo/); assert.match(p.reason, /ESTIMATIVA/);
+  assert.doesNotMatch(p.reason, /precost approve/);
+  assert.equal(submit(e, 'refatorar o modulo de pagamentos').decision, 'block'); // previa nao aprova
+  assert.match(submit(e, 'precost last').reason, /BLOQUEADO/);
+});

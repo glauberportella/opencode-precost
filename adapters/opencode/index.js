@@ -21,7 +21,7 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
   const models = options.models ?? Object.keys(prices.models);
   const ledger = new SessionLedger(options.historyPath ?? join(homedir(), '.local', 'share', 'precost', 'sessions.json'));
   const run = (task) => {
-    const hist = ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read }));
+    const hist = ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, turns: s.turns }));
     return format(estimate({ task, models, prices, history: hist, cacheHit: options.cacheHit ?? 0 }));
   };
   let cachedVersion;
@@ -62,7 +62,7 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
         }
         if (!text) return;
         const root = input.directory ?? process.cwd();
-        const d = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, files: filesFromParts(output.parts, root), config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read })) });
+        const d = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, files: filesFromParts(output.parts, root), config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, turns: s.turns })) });
         if (options.log) options.log(d.text);
         if (d.action === 'allow') return;
         return await deny(d.text);
