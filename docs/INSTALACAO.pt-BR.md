@@ -1,3 +1,5 @@
+[English](INSTALLATION.md) | **Português (Brasil)**
+
 # Instalação e verificação (v0.3.0-dev, repositório privado)
 
 Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, acesso ao repositório privado.
@@ -31,7 +33,7 @@ Testes reais com software de terceiros contra servidores FALSOS locais (sem gast
 ```
 {"model":"claude-sonnet-5.5","limitUsd":5}
 ```
-Sem `limitUsd`, o hook só informa e nunca bloqueia. `trustConfiguredModel:true` é decisão sua de aceitar um modelo observado/declarado como efetivo (ver README, item 3).
+Sem `limitUsd`, o hook só informa e nunca bloqueia. `trustConfiguredModel:true` é decisão sua de aceitar um modelo observado/declarado como efetivo (ver README.pt-BR.md, item 3).
 
 ## 3. Claude Code (testado 2.1.332)
 Copie `adapters/claude-code/settings.example.json` para `~/.claude/settings.json` (ou `.claude/settings.json` do projeto) e troque `/CAMINHO/opencode-precost` pelo caminho do clone. Mantenha `"onFailure":"block"` no UserPromptSubmit: sem ele, crash, timeout ou node ausente deixam o prompt chegar ao modelo.

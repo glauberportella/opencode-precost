@@ -1,6 +1,6 @@
 # Primeiro uso guiado (sem gasto, Linux)
 
-> Instalação, `doctor` e escopo atual: ver `docs/INSTALACAO.md`. Este arquivo é o guia inicial da CLI; trechos marcados como simulados ou não verificados foram superados por `docs/CAPACIDADES.md` (Atualizações 6 a 8).
+> Instalação, `doctor` e escopo atual: ver `docs/INSTALACAO.pt-BR.md`. Este arquivo é o guia inicial da CLI; trechos marcados como simulados ou não verificados foram superados por `docs/CAPACIDADES.md` (Atualizações 6 a 8).
 
 Recorte de prova de conceito local. Nada aqui chama modelo pago. Saidas reais capturadas em `docs/exemplos/` (rodadas em 25/nov/2026, Node 22).
 

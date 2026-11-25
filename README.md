@@ -1,65 +1,94 @@
-# opencode-precost (prototipo)
+# opencode-precost
 
-Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes de codigo (OpenCode e Claude Code), e opcionalmente pede aprovacao explicita quando a faixa alta passa de um limite. Privado, sem chamadas pagas. Primeira release privada v0.2.0, com limites: ver `docs/INSTALACAO.md`, "Limites" e `docs/CAPACIDADES.md`.
+**English** | [Português (Brasil)](README.pt-BR.md)
 
-## Imagens (execucao real, Linux)
-Capturas geradas a partir de saidas reais. Onde ha modelo, ele e um servidor SIMULADO local (sem custo, sem credencial). Nada abaixo foi executado em macOS ou Windows.
+Shows an **estimated** cost range *before* a task runs in a coding agent (OpenCode and Claude Code). Optionally asks for explicit approval when the high end of the range goes above a limit you set. No paid calls, no network access at run time.
 
-![Previa e bloqueio no Claude Code 2.1.332](docs/img/01-previa-e-bloqueio.png)
-![Aprovacao de uso unico](docs/img/02-aprovacao-uso-unico.png)
-![precost estimate no terminal](docs/img/03-estimate-cli.png)
-![precost update-prices (tabela simulada)](docs/img/04-update-prices.png)
-![OpenCode 1.19.6 TUI com precost (modelo simulado)](docs/img/05-opencode-tui.png)
+> Status: development version 0.3.0 (private repository, nothing published yet). Read "Limits" before relying on it. Messages printed by the tool (CLI, hook, plugin) are currently in Portuguese; see "Language" below.
 
-_Imagem 05: ilustracao do bloqueio (modelo sem preco na tabela) em recorte parcial reconstruido da TUI real; nao e screenshot integral nem prova visual do fluxo de aprovacao no OpenCode._
+## What it does
 
-## Atualizar a tabela de precos
+- `precost estimate <task>` prints a per-model range (three fixed scenarios, or percentiles from your own session history). The high end is a P75 / large scenario, **not a cap**.
+- A gate runs before your prompt reaches the model. With `limitUsd` set, a prompt whose high estimate is above the limit is blocked until you type `precost approve CODE`. The approval is bound to the prompt, model, session, price table, limit and estimated ceiling. It lasts 10 minutes (default) and works once.
+- Fails closed when a limit is set: unreadable config, unknown model, model without a price, unreadable context file, or an internal error all block instead of letting the prompt through. Without `limitUsd` the tool only informs ("NO GATE").
+
+## Pictures
+
+All images are **renderings of terminal output text, not UI screenshots**. Where a model appears it is a **simulated** local server (no cost, no credentials). Everything shown was run on **Linux**; nothing here is macOS or Windows validation (see "Platforms").
+
+![Preview and block in Claude Code 2.1.332 (simulated model server)](docs/img/01-preview-and-block.png)
+![Single-use approval (simulated model server)](docs/img/02-single-use-approval.png)
+![precost estimate in the terminal](docs/img/03-estimate-cli.png)
+![precost update-prices (SIMULATED price table, not official prices)](docs/img/04-update-prices.png)
+![OpenCode 1.19.6 TUI with precost (simulated model, partial screen)](docs/img/05-opencode-tui.png)
+
+Image 05 illustrates the block (a model with no price in the table) as a partial crop rebuilt from the real TUI. It is not a full screenshot and not proof of the approval flow in OpenCode.
+
+## Install
+
+Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/INSTALLATION.md).
+
+- **Claude Code (plugin):** `claude --plugin-dir /path/to/opencode-precost` to try it locally. Marketplace install (`/plugin marketplace add <repo>`, `/plugin install precost`) will work only after the repository is public. Not published to any marketplace yet.
+- **Claude Code (manual):** copy `adapters/claude-code/settings.example.json` into your Claude settings and fix the path. Keep `"onFailure": "block"`: without it a crashing, missing or hanging hook lets the prompt reach the model.
+- **OpenCode (1.19.6 only):** `npm i opencode-precost @opencode-ai/plugin@1.19.6` (the package is not on npm yet; use `npm pack` from a clone) and create `.opencode/plugins/precost.js`:
+  ```js
+  import { PrecostPlugin } from 'opencode-precost';
+  export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
+  ```
+  Loading the plugin only through `opencode.json` was not verified.
+- **Config** (`~/.config/precost/config.json`, Windows `%APPDATA%\precost\config.json`): `{"model":"claude-sonnet-5.5","limitUsd":5}`.
+- **Check the install:** `node bin/precost.js doctor`. It cannot prove the client loaded the hook in your session. In a real session type `precost last` first: if a model answers, the hook is not loaded.
+
+## Commands
+
+Typed in the prompt (they never reach the model): `precost estimate <task>`, `precost last`, `precost approve CODE`, `precost revoke CODE|all`.
+In a terminal: `node bin/precost.js estimate "task" --model claude-sonnet-5.5`.
+
+### Update the reference price table
+
 ```
-precost prices                                   # tabela em uso, data e idade (aviso se > 30 dias)
-precost update-prices --from ARQUIVO_OU_URL      # valida e mostra o diff (nada e gravado). URL: https obrigatorio
-precost update-prices --from ARQUIVO_OU_URL --yes   # grava em ~/.config/precost/prices.json (Windows: %APPDATA%\precost\prices.json)
-precost update-prices                            # sem --from (e sem PRECOST_PRICES_SOURCE): erro com orientacao, nada muda
-precost update-prices --reset                    # volta para a tabela embutida
-```
-Recusa tabela invalida, mais antiga que a atual, ou com remocao/variacao acima de 5x (use `--force` so depois de conferir a fonte). Roda so na CLI, nunca dentro do hook/plugin. Usa-se a tabela do usuario so se nao for mais antiga que a embutida. Trocar a tabela invalida aprovacoes pendentes. Nao ha URL padrao nem leitura automatica das paginas oficiais de preco: voce indica a fonte (arquivo ou https). Hoje a tabela embutida (`data/prices.json`) e a fonte de referencia; as paginas oficiais citadas em cada modelo continuam sendo a verdade. Confira sempre.
-
-## Plataformas
-- Linux: testado (testes unitarios, Claude Code 2.1.332 e OpenCode 1.19.6 reais contra servidor falso).
-- macOS e Windows: o codigo usa caminhos por plataforma (`src/paths.js`; Windows: `%APPDATA%`/`%LOCALAPPDATA%`) e o hook do Claude Code usa `node` + `args` (sem shell). A matriz de CI (`.github/workflows/ci.yml`) roda os testes unitarios em Ubuntu, macOS e Windows. Ate a CI passar, trate como NAO VERIFICADO. Os scripts `e2e:*` sao bash/pty e rodam so em Linux/macOS.
-
-## Claude Code como plugin
-`claude plugin marketplace add glauberportella/opencode-precost` e `claude plugin install precost@precost-marketplace` (apos o repositorio estar publico). Local: `claude --plugin-dir .`. Testado em Linux com Claude Code 2.1.332 real e servidor falso (`npm run e2e:claude-plugin`). `onFailure:"block"` no hook do plugin: carregado e usado, falha do hook em plugin ainda nao testada.
-
-## Instalar e testar (reproduzivel)
-```
-npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)
-npm test          # 54 testes; sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
-node bin/precost.js doctor   # verifica instalacao local (limite: nao prova que o cliente carregou o hook)
-npm run e2e:opencode          # OpenCode 1.19.6 real, sem modelo: ciclo bloqueio/approve/uso unico (npx opencode-ai@1.19.6)
-npm run e2e:opencode-ledger   # OpenCode 1.19.6 real + provedor FALSO local: evento real do assistente, semantica de tokens/custo
-npm run e2e:claude-tui        # TUI INTERATIVA real do Claude Code (pty) + servidor falso: bloqueio visivel, 0 chamadas ao modelo
-npm run e2e:claude-failure    # falha do hook (crash, node ausente, timeout) no settings.example.json real: nada chega ao modelo (onFailure:block)
-npm run e2e:opencode-tui      # TUI real do OpenCode 1.19.6 (pty): bloqueio visivel, plugin carregado, sem provedor pago
-npm run e2e:claude            # Claude Code 2.1.332 REAL + servidor Anthropic FALSO local: hook, bloqueio sem chamar modelo, approve, uso unico, modelo via transcript (npx @anthropic-ai/claude-code@2.1.332)
+precost prices                                   # table in use, date, age (warns after 30 days)
+precost update-prices --from FILE_OR_URL         # validates and shows the diff; nothing is written (URL must be https)
+precost update-prices --from FILE_OR_URL --yes   # writes ~/.config/precost/prices.json (Windows: %APPDATA%\precost\prices.json)
+precost update-prices                            # no --from and no PRECOST_PRICES_SOURCE: error with guidance, nothing changes
+precost update-prices --reset                    # back to the bundled table
 ```
 
-## Primeiro uso real guiado (escopo)
-1. Previa pelo terminal, o canal acessivel e verificado: `node bin/precost.js estimate "tarefa..." --model gemini-3.5-flash` (ou `--task`, `--file`). Tambem `node bin/precost.js last` mostra o ultimo bloqueio.
-2. Modelos com preco conhecido na tabela (`data/prices.json`): Gemini 3.x/4 e Claude 4.5 a 5.5. Modelo fora da tabela com limite configurado = bloqueia e pede aprovacao.
-3. Claude Code NAO informa o modelo ao hook (observado na 2.1.332). So `PRECOST_MODEL` e aceito como modelo efetivo sem pior caso: e uma DECLARACAO do operador, NAO uma prova tecnica (ela nao forca o Claude a usar esse modelo; use-a junto com `claude --model` igual). Rastreador, ultima resposta do transcript e `--model` do processo sao OBSERVADOS: nao garantem o modelo do proximo prompt (apos `/model`). `ANTHROPIC_MODEL`, settings do Claude e `config.model` sao DECLARADOS. Fora do caso comprovado, o gate usa o PIOR CASO do catalogo suportado (rotulado, nao e preco comprovado nem teto: modelo fora do catalogo nao e coberto) e a aprovacao fica presa a esse estado. `trustConfiguredModel:true` no config aceita um modelo observado/declarado consistente como efetivo (decisao do usuario), exceto quando o transcript registra um `/model` depois da ultima resposta (troca pendente: volta ao pior caso). Exemplo de config: `{"model":"claude-sonnet-5.5","limitUsd":5}`. Historico: com 5+ sessoes do mesmo modelo na pasta de transcripts do projeto, a previa usa o consumo real.
-   Instalacao: copie `adapters/claude-code/settings.example.json` ajustando o caminho. O `onFailure:"block"` do UserPromptSubmit e obrigatorio para o gate: sem ele (ou com `continue`) crash, node ausente ou timeout do hook deixam o prompt chegar ao modelo (reproduzido; `npm run e2e:claude-failure`). Sem limite configurado o hook e so informativo.
-4. OpenCode: `.opencode/plugins/precost.js` reexportando `adapters/opencode/index.js`, opcoes `limitUsd`, `models`, `ttlMin`. So OpenCode 1.19.6 (outra versao bloqueia, salvo `allowUnverifiedVersion`).
-5. Comandos digitados no prompt (nao chegam ao modelo): `precost estimate <tarefa>`, `precost last`, `precost approve CODIGO`, `precost revoke CODIGO|all`. No Claude Code 2.1.332 em modo `claude -p` o texto aparece na saida ("UserPromptSubmit operation blocked by hook: ..."), verificado com Claude Code real; a TUI interativa tambem foi verificada (`npm run e2e:claude-tui`). No OpenCode o cliente recebe erro generico; na TUI real do OpenCode 1.19.6 o texto de bloqueio aparece numa caixa de erro (`npm run e2e:opencode-tui`, captura em docs/evidence/opencode-tui-pty-capture.txt); ciclo approve/reenvio/uso unico testado na TUI com provedor falso local. Trate o terminal como canal confiavel e os comandos no prompt como conveniencia nao comprovada no OpenCode.
+It rejects an invalid table, one older than the current one, or one with a removal or a change above 5x (use `--force` only after checking the source). It runs only from the CLI, never inside the hook or plugin. A user table is used only if it is not older than the bundled one. Changing the table invalidates pending approvals. There is **no default URL and no automatic reading of official pricing pages**: you provide the source (file or https URL). Today the bundled `data/prices.json` is the reference; the official pages cited per model remain the source of truth. Always check them.
 
-## Limites (resumo; detalhes em docs/CAPACIDADES.md)
-- E estimativa: tokens = chars/4 (x1.3 nos observados para Claude 4.7+) + 8k de sistema (premissa). Nao e custo conhecido.
-- Faixa alta = P75/cenario grande, nao teto. O gate age antes do prompt; nao limita gasto durante a tarefa nem laços longos.
-- OpenCode nao tem previa automatica antes do modelo; este plugin calcula dentro de `chat.message`. O bloqueio por throw e comportamento nao documentado (versao fixada, falha fechada).
-- Gate contra gasto acidental, nao contra agente com shell no mesmo usuario (estado e arquivo local).
-- Precos: Gemini via cloud.google.com/vertex-ai/generative-ai/pricing, Claude via platform.claude.com/docs/en/about-claude/pricing, lidos em 25/nov/2026. Carbon/Argon: bruto inferido. Nao modelados: Batch, Priority, Fast mode, residencia de dados.
-- Historico: so sessoes do mesmo modelo e projeto, minimo 5. Semantica dos tokens validada com eventos/transcripts reais de OpenCode e Claude Code contra provedores FALSOS (sem fatura real): `input` exclui o cache. Comparacao com fatura real ainda nao feita.
-- Premissa de sistema: 8k tokens no OpenCode e 13k no Claude Code, a partir do tamanho medido do corpo da requisicao (32,6 KB e 48,9 KB para um prompt de 3 a 9 caracteres) convertido por chars/4; nao e contagem de tokens do provedor.
+## Platforms
 
-## Licenca
+What was actually executed is in the matrix in [docs/INSTALLATION.md](docs/INSTALLATION.md#validation-matrix). Linux is not validation of macOS or Windows. The code uses per-platform paths (`src/paths.js`) and the Claude Code hook uses `node` + `args` (no shell). `npm run e2e:native` (Node, no bash) runs the real clients against fake local servers on Linux, macOS and Windows; results per system are in the matrix. Official client support on Windows: Claude Code runs natively on Windows 10 1809+ (Git for Windows recommended); OpenCode runs on Windows but its docs recommend WSL.
 
-MIT. Veja [LICENSE](LICENSE). Copyright (c) 2026 Glauber Portella.
+## Test it
+
+```
+npm ci            # installs the dev dependency @opencode-ai/plugin@1.19.6 (needed by the OpenCode adapter test)
+npm test          # 63 unit tests
+npm run e2e:native            # real Claude Code 2.1.332 and OpenCode 1.19.6 vs fake servers: block, approve, single use, fail closed
+npm run e2e:claude-plugin     # Claude Code plugin cycle (bash, Linux/macOS)
+npm run e2e:claude-plugin-failure   # hook crash / missing node / timeout never reach the model (bash)
+npm run e2e:opencode          # OpenCode 1.19.6 block/approve/single-use cycle (bash)
+```
+End-to-end scripts download pinned client versions through `npx` and call only local fake servers. No paid model is called.
+
+## Limits
+
+- It is an estimate: tokens are chars/4 (x1.3 for observed Claude 4.7+ tokens) plus an assumed system prompt (8k OpenCode, 13k Claude Code). It is not a known cost.
+- The high end is not a cap. The gate acts before the prompt; it does not limit spend during a task or inside long loops.
+- Claude Code does not tell the hook which model is active (observed in 2.1.332). An unproven model uses the worst case in the supported catalog, labeled as such.
+- OpenCode has no automatic preview before the model; this plugin computes it inside `chat.message`. Blocking by throwing is undocumented behavior, so the plugin is pinned to OpenCode 1.19.6 and fails closed on other versions (unless `allowUnverifiedVersion` is set).
+- Approval is a local file of the same user. It protects against accidental spend, not against an agent with a shell.
+- The gate only works while the plugin or hook is loaded.
+- Prices: Gemini from cloud.google.com/vertex-ai/generative-ai/pricing and Claude from platform.claude.com/docs/en/about-claude/pricing, read on 2026-11-25. Not modeled: batch, priority, fast mode, data residency. Carbon/Argon raw price is inferred.
+- Token semantics were checked against real events and transcripts from OpenCode and Claude Code with **fake** providers. No comparison with a real invoice has been done.
+
+More detail: [docs/CAPABILITIES.md](docs/CAPABILITIES.md).
+
+## Language
+
+The documentation is available in English (main) and Portuguese (Brasil). The messages printed by the tool itself are still Portuguese only; an English default with a language setting is proposed but not implemented.
+
+## License
+
+MIT. See [LICENSE](LICENSE). Copyright (c) 2026 Glauber Portella.
