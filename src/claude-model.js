@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 
 // Modelo ativo do Claude Code. O evento do hook NAO traz modelo (observado na 2.1.332), entao a comprovacao vem de fontes indiretas.
-// COMPROVADAS: PRECOST_MODEL (declaracao explicita), rastreador, ultima resposta no transcript, flag --model do processo claude (Linux, /proc).
+// ACEITA SEM PIOR CASO: PRECOST_MODEL (declaracao do operador, nao prova tecnica), rastreador, ultima resposta no transcript, flag --model do processo claude (Linux, /proc).
 // NAO COMPROVADAS (padroes declarados): ANTHROPIC_MODEL, "model" nos settings do Claude, config.model do precost. O usuario pode ter trocado
 // de modelo ou o Claude pode usar outro padrao. Com `trustConfiguredModel: true` no config o usuario declara que estas fontes valem.
 const rj = (p) => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
