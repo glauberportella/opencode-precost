@@ -75,13 +75,24 @@ test('resolucao de modelo Claude e limiar de 100K do Haiku 5.5', () => {
   assert.equal(resolveModel(prices, 'modelo-x'), null);
   const a = costCalls(priceAt(prices, 'claude-haiku-5.5'), [{ ctx: 100000, cachedIn: 0, out: 0 }]).usd;
   const b = costCalls(priceAt(prices, 'claude-haiku-5.5'), [{ ctx: 100001, cachedIn: 0, out: 0 }]).usd;
-  assert.ok(Math.abs(a - 0.01) < 1e-9); assert.ok(Math.abs(b - 0.0500005) < 1e-9);
+  assert.ok(Math.abs(a - 0.0125) < 1e-9); assert.ok(Math.abs(b - 0.0625006) < 1e-7); // entrada nova cobrada como cache write 5min (conservador)
 });
-test('historico agregado: limiar e por chamada (usa media por chamada), nao soma de todos os turnos', () => {
-  const mk = (turns, input) => Array.from({ length: 5 }, () => ({ input, output: 1000, cache_read: 0, turns }));
-  const many = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(100, 5_000_000) }); // 50K por chamada, 5M no total
-  assert.equal(many.rows[0].lowerBound, false);
-  assert.ok(many.rows[0].notes.some((n) => /pico de contexto por chamada desconhecido/.test(n)));
-  const big = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(10, 5_000_000) }); // 500K por chamada
-  assert.equal(big.rows[0].lowerBound, true);
+test('historico agregado: so pico REAL registrado afirma; media nunca prova ausencia de picos', () => {
+  const mk = (peak) => Array.from({ length: 5 }, () => ({ input: 5_000_000, output: 1000, cache_read: 0, turns: 100, ...(peak ? { peakCtx: peak } : {}) }));
+  const sem = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk() }); // media 50K, pico desconhecido
+  assert.equal(sem.rows[0].lowerBound, true);
+  const baixo = estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(60_000) });
+  assert.equal(baixo.rows[0].lowerBound, false); assert.ok(baixo.rows[0].notes.some((n) => /pico real registrado/.test(n)));
+  assert.equal(estimate({ task: 'x', models: ['gemini-4-neon'], prices, history: mk(500_000) }).rows[0].lowerBound, true);
+  assert.equal(estimate({ task: 'x', models: ['gemini-3.5-flash'], prices, history: mk() }).rows[0].lowerBound, false); // preco unico: pico irrelevante
+});
+
+test('Claude: multiplicador de tokenizador so nos tokens observados; cache write conservador; modelo antigo sem multiplicador', () => {
+  const big = 'x'.repeat(400_000); // 100K tokens observados
+  const nu = estimate({ task: big, models: ['claude-sonnet-5.5', 'claude-sonnet-4.6'], prices });
+  assert.equal(nu.rows[0].scenarios.pequena.tokens.freshIn > nu.rows[1].scenarios.pequena.tokens.freshIn, true);
+  assert.ok(nu.rows[0].notes.some((n) => /x1\.3/.test(n))); assert.ok(nu.rows[0].notes.some((n) => /cache write 5min/.test(n)));
+  assert.ok(!nu.rows[1].notes.some((n) => /x1\.3/.test(n)));
+  const c = costCalls(priceAt(prices, 'claude-sonnet-5.5'), [{ ctx: 1_000_000, cachedIn: 0, out: 0 }]).usd;
+  assert.ok(Math.abs(c - 2.5) < 1e-9); // 2,50 (write 5min), nao 2,00
 });

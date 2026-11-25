@@ -11,6 +11,11 @@ if (process.argv[2] === 'last') { // ultima mensagem de bloqueio (UX quando o cl
   try { console.log(readFileSync(join(process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'), 'last-block.txt'), 'utf8')); } catch { console.log('precost: sem bloqueio registrado.'); }
   process.exit(0);
 }
+if (process.argv[2] === 'estimate' && process.argv[3] && !process.argv[3].startsWith('--')) { // precost estimate "tarefa" [--model m]: usa model do config se existir
+  let cfg = {}; try { cfg = JSON.parse(readFileSync(process.env.PRECOST_CONFIG ?? join(homedir(), '.config', 'precost', 'config.json'), 'utf8')); } catch { /* sem config */ }
+  const rest = process.argv.slice(4);
+  process.argv.splice(2, 2, '--task', process.argv[3], ...(rest.includes('--model') || !cfg.model ? [] : ['--model', cfg.model]));
+}
 const { values } = parseArgs({ options: {
   task: { type: 'string' }, 'task-file': { type: 'string' }, file: { type: 'string', multiple: true },
   model: { type: 'string', multiple: true }, prices: { type: 'string' }, history: { type: 'string' },

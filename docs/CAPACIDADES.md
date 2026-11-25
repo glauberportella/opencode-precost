@@ -42,3 +42,11 @@ Reenviar o mesmo prompt nao aprova. Para aprovar: digitar `precost approve CODIG
 - **Historico agregado e limiar por chamada:** o limiar de contexto longo vale por chamada. Com historico, usa-se a media de tokens por chamada (entrada+cache / turnos). Media acima do limiar = limite inferior; abaixo = so nota de que o pico por chamada e desconhecido (nao soma todos os turnos).
 - **Preco bruto de Carbon/Argon e INFERIDO** (4/20 = preco pos-promocao; a pagina so descreve 50% de creditos de volta). Sem validacao em fonte primaria de faturamento: estimativa conservadora, nunca "cobranca exata".
 - Limite fundamental mantido: estado em arquivos do mesmo usuario; agente com shell pode alterar. Nao e seguranca resolvida.
+
+## Atualizacao 3 (conjunto consolidado)
+- **Subestimativas conhecidas agora entram no custo (conservador):** Claude 4.7+ usa x1.3 nos tokens observados (nota oficial de ~30%, valor aproximado); cache write: toda entrada nova e cobrada como cache write 5min (Claude), o que pode superestimar. Resta: chars/4 e a premissa de 8k de sistema (premissas rotuladas).
+- **Pico por chamada:** o ledger registra o maior contexto real por sessao (`peakCtx`). Historico agregado so afirma sem faixa longa com pico real registrado; media por chamada nao prova ausencia de picos; pico desconhecido = limite inferior (exige aprovacao).
+- **Historico filtrado:** so sessoes do mesmo modelo e do mesmo projeto (diretorio) entram; sessao com varios modelos fica fora. `cache_write` agora e registrado e custeado. Semantica de `input` vs `cache` dos eventos reais nao validada (nenhuma resposta de modelo observada).
+- **Arquivos ignorados** (segredo, grande): o conteudo nao e lido; a aprovacao e vinculada a assinatura tamanho+mtime. Mudanca que preserve tamanho e mtime nao e detectada (limite declarado).
+- **UX:** canal verificado = terminal (`precost estimate`, `precost last`). Comandos no prompt: contrato lido (Claude Code) e erro+toast (OpenCode) sem evidencia de TUI/UI real de que o texto aparece.
+- **Reproducao:** `npm ci && npm test` (38 testes); sem `npm ci` o teste do adaptador OpenCode falha por dependencia ausente.

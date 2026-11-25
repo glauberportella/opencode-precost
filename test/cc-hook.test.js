@@ -146,3 +146,14 @@ test('precost estimate/last: previa sob demanda sem modelo e sem aprovar nada', 
   assert.equal(submit(e, 'refatorar o modulo de pagamentos').decision, 'block'); // previa nao aprova
   assert.match(submit(e, 'precost last').reason, /BLOQUEADO/);
 });
+
+test('arquivo ignorado (segredo/grande): mudar o conteudo invalida a aprovacao por assinatura de stat, sem ler o conteudo', () => {
+  const e = mkenv(CFG); const proj = join(e.dir, 'p2'); mkdirSync(proj);
+  writeFileSync(join(proj, '.env'), 'A=1');
+  const run = (prompt) => JSON.parse(spawnSync('node', [hook], { input: JSON.stringify({ session_id: 's1', prompt, cwd: proj }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' }).stdout);
+  run(`precost approve ${codeOf(run('veja @.env'))}`);
+  writeFileSync(join(proj, '.env'), 'A=12345'); // tamanho muda
+  assert.equal(run('veja @.env').decision, 'block');
+  run(`precost approve ${codeOf(run('veja @.env'))}`);
+  assert.equal(run('veja @.env').decision, undefined); // controle positivo
+});

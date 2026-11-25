@@ -69,3 +69,25 @@ test('ledger: dedup por id persiste apos reinicio e nao duplica gasto', async ()
   await b['tool.execute.before']({ tool: 'bash', sessionID: 's1' }, {}); // 0.6, nao 1.2
   await assert.rejects((await PrecostPlugin({}, { historyPath: hp, sessionLimitUsd: 'x' }))['tool.execute.before']({ sessionID: 's1' }, {}), /invalido/);
 });
+
+test('ledger registra pico real de contexto por chamada e o historico o usa', async () => {
+  const d = mkdtempSync(join(tmpdir(), 'oc-pk-')); const L = new (await import('../src/history.js')).SessionLedger(join(d, 'h.json'));
+  L.record({ id: 'a', sessionID: 's', cost: 0.1, tokens: { input: 50_000, output: 10, cache: { read: 20_000, write: 0 } } });
+  L.record({ id: 'b', sessionID: 's', cost: 0.1, tokens: { input: 300_000, output: 10, cache: { read: 0, write: 0 } } });
+  L.record({ id: 'b', sessionID: 's', cost: 0.1, tokens: { input: 300_000, output: 10, cache: { read: 0, write: 0 } } }); // reenvio do mesmo id
+  assert.equal(L.list()[0].peakCtx, 300_000); assert.equal(L.list()[0].turns, 2);
+});
+
+test('historico do plugin so usa sessoes do mesmo modelo e projeto; mistura nao entra', async () => {
+  const d = mkdtempSync(join(tmpdir(), 'oc-h-')); const hp = join(d, 'h.json');
+  const P = (dir, opt = {}) => PrecostPlugin({ directory: dir }, { historyPath: hp, models: ['gemini-3.5-flash'], ...opt });
+  const rec = async (p, sess, model, n) => { for (let i = 0; i < 2; i++) await p.event({ event: { type: 'message.updated', properties: { info: { id: `${sess}-${i}`, sessionID: sess, role: 'assistant', modelID: model, time: { created: 1, completed: 2 }, cost: 0, tokens: { input: 1000 * n, output: 100, reasoning: 0, cache: { read: 0, write: 0 } } } } } }); };
+  const pa = await P('/proj/a');
+  for (let i = 0; i < 5; i++) await rec(pa, `a${i}`, 'gemini-3.5-flash', 10);
+  for (let i = 0; i < 5; i++) await rec(pa, `m${i}`, 'outro-modelo', 10);
+  const est = async (dir) => { const r = await (await P(dir)).tool.precost_estimate.execute({ task: 'x' }, {}); return String(r.output ?? r); };
+  const out = await est('/proj/a');
+  assert.match(out, /base: historico/);
+  const other = await est('/proj/b');
+  assert.match(other, /base: premissas/); // outro projeto: sem historico
+});

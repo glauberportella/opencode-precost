@@ -9,13 +9,14 @@ const SECRET = /(^|\/)(\.env(\..*)?|.*\.(pem|key|p12|pfx)|id_(rsa|ed25519)|\.git
 const MAX = 1_000_000;
 
 export function readContextFile(path, root) {
+  const sig = (p) => { try { const s = statSync(p); return `${s.size}:${Math.round(s.mtimeMs)}`; } catch { return 'sem-stat'; } };
   try {
     const rp = realpathSync(resolve(root, path)), rr = realpathSync(root);
     if (rp !== rr && !rp.startsWith(rr + sep)) return { path, skipped: 'fora do projeto' };
-    if (SECRET.test(rp.slice(rr.length + 1)) || SECRET.test(basename(rp))) return { path, skipped: 'possivel segredo, nao lido' };
+    if (SECRET.test(rp.slice(rr.length + 1)) || SECRET.test(basename(rp))) return { path, skipped: 'possivel segredo, nao lido', sha: 'stat:' + sig(rp) };
     const st = statSync(rp);
     if (!st.isFile()) return { path, skipped: 'nao e arquivo' };
-    if (st.size > MAX) return { path, skipped: `maior que ${MAX} bytes`, bytes: st.size };
+    if (st.size > MAX) return { path, skipped: `maior que ${MAX} bytes`, bytes: st.size, sha: 'stat:' + sig(rp) };
     const text = readFileSync(rp, 'utf8');
     return { path, bytes: st.size, text, sha: createHash('sha256').update(text).digest('hex') };
   } catch (e) { return { path, skipped: 'ilegivel' }; }

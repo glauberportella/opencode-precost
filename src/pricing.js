@@ -43,22 +43,26 @@ export function costCalls(price, calls, defaultThreshold = 200000) {
     const r = long ? { ...price, ...price.long_context } : price;
     const cachedRate = has(r.cache_read) ? r.cache_read : r.input;
     if (c.cachedIn > 0 && !has(r.cache_read)) cacheKnown = false;
-    usd += ((c.ctx - c.cachedIn) * r.input + c.cachedIn * cachedRate + c.out * r.output) / 1e6;
+    const freshRate = r.cache_write_5m ?? r.input; // conservador: entrada nova como cache write quando o preco existe
+    usd += ((c.ctx - c.cachedIn) * freshRate + c.cachedIn * cachedRate + c.out * r.output) / 1e6;
   }
   return { usd, cacheKnown, longUnknown };
 }
 
 // Custo de totais agregados (historico real): nao ha ctx por chamada, entao so a taxa base.
-export function costTotals(price, { freshIn, cachedIn = 0, out, turns }, defaultThreshold = 200000) {
+export function costTotals(price, { freshIn, cachedIn = 0, out, peak, cacheWrite = 0 }, defaultThreshold = 200000) {
   const threshold = price.long_context_threshold ?? defaultThreshold;
   const cacheKnown = has(price.cache_read) || cachedIn === 0;
   const cachedRate = has(price.cache_read) ? price.cache_read : price.input;
-  // O limiar e POR CHAMADA: o total agregado nao diz o contexto de cada chamada. Usa a media por chamada (turns) como indicio:
-  // media acima do limiar = limite inferior; abaixo = so nota de que o pico por chamada e desconhecido.
+  // O limiar e POR CHAMADA e o total agregado nao diz o contexto de cada chamada. Media por chamada nao prova ausencia de picos.
+  // So com pico REAL registrado (peak) da pra afirmar: pico acima do limiar = limite inferior; abaixo = sem faixa longa.
+  // Pico desconhecido = incerteza: limite inferior (exige aprovacao no gate).
   let longUnknown = false;
   if (typeof price.long_context === 'object' || price.long_context === 'unknown') {
-    const avg = turns > 0 ? (freshIn + cachedIn) / turns : null;
-    longUnknown = avg === null ? true : avg > threshold ? true : `agregado: pico de contexto por chamada desconhecido (media ${Math.round(avg)} tokens/chamada, abaixo do limiar de ${threshold}); faixa longa nao aplicada`;
+    if (typeof peak !== 'number') longUnknown = true;
+    else if (peak > threshold) longUnknown = true;
+    else longUnknown = `pico real registrado ${peak} tokens/chamada, abaixo do limiar ${threshold}: faixa longa nao se aplica ao historico`;
   }
-  return { usd: (freshIn * price.input + cachedIn * cachedRate + out * price.output) / 1e6, cacheKnown, longUnknown };
+  const w = price.cache_write_5m ?? price.input;
+  return { usd: (freshIn * (price.cache_write_5m ?? price.input) + cacheWrite * w + cachedIn * cachedRate + out * price.output) / 1e6, cacheKnown, longUnknown };
 }

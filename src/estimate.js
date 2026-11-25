@@ -31,7 +31,7 @@ export function totalsOf(calls) {
 
 function fromHistory(history) {
   const col = (k) => history.map((h) => h[k] ?? 0).sort((a, b) => a - b);
-  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)), turns: Math.max(1, Math.round(quantile(col('turns'), q))) });
+  const pick = (q) => ({ freshIn: Math.round(quantile(col('input'), q)), cachedIn: Math.round(quantile(col('cache_read'), q)), out: Math.round(quantile(col('output'), q)), cacheWrite: Math.round(quantile(col('cache_write'), q)), turns: Math.max(1, Math.round(quantile(col('turns'), q))), peak: history.every((h) => typeof h.peakCtx === 'number') ? Math.round(quantile(col('peakCtx'), q)) : undefined });
   return { low: pick(0.25), mid: pick(0.5), high: pick(0.75) };
 }
 
@@ -40,26 +40,33 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
   const promptTokens = counter(task), fileTokens = fileTexts.reduce((s, t) => s + counter(t), 0);
   // OBSERVADO: so os caracteres lidos. Tokens e custo abaixo sao ESTIMATIVAS (chars/4 + premissa de sistema).
   const initial = { observedChars: promptChars + fileChars, promptChars, fileChars, estTokens: promptTokens + fileTokens + systemTokens, estPromptTokens: promptTokens, estFileTokens: fileTokens, assumedSystemTokens: systemTokens };
-  const base = initial.estTokens;
   const threshold = prices.long_context_threshold_tokens ?? 200000;
 
-  let basis, scen;
-  if (history && history.length >= 5) {
-    scen = fromHistory(history);
-    const extra = promptTokens + fileTokens; // entrada observada desta tarefa, somada uma vez como entrada nova (limite inferior do efeito do tamanho)
-    for (const s of Object.values(scen)) s.freshIn += extra;
-    basis = { kind: 'historico', sessions: history.length, note: `P25/P50/P75 de sessoes anteriores informadas, mais ~${extra} tokens de entrada observada desta tarefa somados uma vez; o historico nao depende do tamanho da tarefa alem disso` };
-  } else {
-    scen = {};
-    for (const [name, k] of Object.entries(DEFAULT_SCENARIOS)) scen[name] = simulateCalls({ base, ...k, cacheHit });
-    basis = { kind: 'premissas', note: history?.length ? `historico com ${history.length} sessoes (<5) ignorado` : 'sem historico: tres cenarios com premissas fixas, nao medidas', scenarios: DEFAULT_SCENARIOS, cacheHit };
-  }
+  // Cenarios por modelo: o multiplicador de tokenizador (Claude 4.7+, ~30%) so afeta os tokens observados (prompt/arquivos), nao a premissa de sistema.
+  const hasHist = history && history.length >= 5;
+  const build = (mult) => {
+    const pT = Math.round(promptTokens * mult), fT = Math.round(fileTokens * mult);
+    if (hasHist) {
+      const sc = fromHistory(history);
+      for (const s of Object.values(sc)) s.freshIn += pT + fT; // entrada observada desta tarefa somada uma vez
+      return sc;
+    }
+    const sc = {};
+    for (const [name, k] of Object.entries(DEFAULT_SCENARIOS)) sc[name] = simulateCalls({ base: pT + fT + systemTokens, ...k, cacheHit });
+    return sc;
+  };
+  const basis = hasHist
+    ? { kind: 'historico', sessions: history.length, note: 'P25/P50/P75 de sessoes anteriores informadas (mesmo modelo e projeto, filtradas pelo adaptador), mais a entrada observada desta tarefa somada uma vez; o historico nao depende do tamanho da tarefa alem disso. Semantica input/cache dos eventos reais NAO validada contra resposta de modelo' }
+    : { kind: 'premissas', note: history?.length ? `historico com ${history.length} sessoes (<5) ignorado` : 'sem historico: tres cenarios com premissas fixas, nao medidas', scenarios: DEFAULT_SCENARIOS, cacheHit };
 
   const rows = models.map((model) => {
     const price = priceAt(prices, model, date);
     if (!price || typeof price.input !== 'number' || typeof price.output !== 'number') return { model, error: 'sem preco na tabela (n/d, nao tratado como zero)' };
     const scenarios = {}, notes = [];
     let lowerBound = false;
+    const mult = price.tokenizer_multiplier ?? 1;
+    const scen = build(mult);
+    const base = Math.round(promptTokens * mult) + Math.round(fileTokens * mult) + systemTokens;
     for (const [name, u] of Object.entries(scen)) {
       const c = Array.isArray(u) ? costCalls(price, u, threshold) : costTotals(price, u, threshold);
       scenarios[name] = { usd: c.usd, tokens: Array.isArray(u) ? totalsOf(u) : u };
@@ -67,8 +74,8 @@ export function estimate({ task = '', fileTexts = [], models, prices, history, c
       if (!c.cacheKnown) notes.push('sem preco de cache na tabela: entrada em cache cobrada a preco cheio (limite superior)');
       if (c.longUnknown) notes.push(typeof c.longUnknown === 'string' ? c.longUnknown : 'contexto acima do limiar: tabela nao traz taxa longa (desconhecido)');
     }
-    if (price.tokenizer_note) notes.push(price.tokenizer_note);
-    if (price.cache_write_5m) notes.push(`cache write (US$${price.cache_write_5m}/1M 5min) nao modelado: pode subestimar`);
+    if (mult !== 1) notes.push(`tokens observados x${mult} (tokenizador novo, ~30% a mais; ${'premissa da nota oficial'})`);
+    if (price.cache_write_5m) notes.push(`conservador: toda entrada nova cobrada como cache write 5min (US$${price.cache_write_5m}/1M); economia real do cache nao creditada alem da leitura`);
     if (price.access_note) notes.push(`acesso: ${price.access_note}`);
     if (price.cache_write) notes.push(`cache write (US$${price.cache_write}/1M a partir de ${price.cache_write_from}) nao modelado`);
     const initialUsd = costCalls(price, [{ ctx: base, cachedIn: 0, out: 0 }], threshold).usd;

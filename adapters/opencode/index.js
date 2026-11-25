@@ -20,8 +20,9 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
   const prices = loadPrices(options.prices);
   const models = options.models ?? Object.keys(prices.models);
   const ledger = new SessionLedger(options.historyPath ?? join(homedir(), '.local', 'share', 'precost', 'sessions.json'));
+  const histFor = (modelID) => ledger.list().filter((s) => s.turns > 0 && s.model && s.model === modelID && s.project === input.directory).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, cache_write: s.cache_write, turns: s.turns, peakCtx: s.peakCtx }));
   const run = (task) => {
-    const hist = ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, turns: s.turns }));
+    const hist = histFor(models[0]);
     return format(estimate({ task, models, prices, history: hist, cacheHit: options.cacheHit ?? 0 }));
   };
   let cachedVersion;
@@ -42,7 +43,7 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
     event: async ({ event }) => {
       if (event.type !== 'message.updated') return;
       const m = event.properties.info;
-      if (m.role === 'assistant' && m.time?.completed) ledger.record({ id: m.id, sessionID: m.sessionID, cost: m.cost, tokens: m.tokens });
+      if (m.role === 'assistant' && m.time?.completed) ledger.record({ id: m.id, sessionID: m.sessionID, cost: m.cost, tokens: m.tokens, model: m.modelID, project: input.directory });
     },
     // Verificado em opencode 1.19.6 (docs/evidence-*): lancar aqui impede o prompt de entrar na sessao e de chegar ao modelo.
     // Efeito NAO documentado: por isso a versao e fixada (PINNED_OPENCODE) e verificada em runtime; versao diferente = FALHA FECHADA,
@@ -62,7 +63,7 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
         }
         if (!text) return;
         const root = input.directory ?? process.cwd();
-        const d = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, files: filesFromParts(output.parts, root), config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: ledger.list().filter((s) => s.turns > 0).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, turns: s.turns })) });
+        const d = decide({ prompt: text, model: inp.model?.modelID, session: inp.sessionID, files: filesFromParts(output.parts, root), config: { limitUsd: options.limitUsd, ttlMin: options.ttlMin, cacheHit: options.cacheHit, prices: options.prices, compare: options.compare }, stateDir: options.stateDir ?? join(homedir(), '.cache', 'precost'), history: histFor(inp.model?.modelID) });
         if (options.log) options.log(d.text);
         if (d.action === 'allow') return;
         return await deny(d.text);

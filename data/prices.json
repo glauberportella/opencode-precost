@@ -162,7 +162,8 @@
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
    "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
-   "long_context": "none"
+   "long_context": "none",
+   "tokenizer_multiplier": 1.3
   },
   "claude-opus-5.5": {
    "input": 4,
@@ -173,7 +174,8 @@
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
    "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
-   "long_context": "none"
+   "long_context": "none",
+   "tokenizer_multiplier": 1.3
   },
   "claude-sonnet-5.5": {
    "input": 2,
@@ -184,7 +186,8 @@
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
    "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
-   "long_context": "none"
+   "long_context": "none",
+   "tokenizer_multiplier": 1.3
   },
   "claude-haiku-5.5": {
    "input": 0.1,
@@ -198,9 +201,11 @@
    "long_context": {
     "input": 0.5,
     "output": 2.5,
-    "cache_read": 0.05
+    "cache_read": 0.05,
+    "cache_write_5m": 0.625
    },
-   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima"
+   "tokenizer_note": "tokenizador novo (4.7+): ~30% mais tokens para o mesmo texto; chars/4 subestima",
+   "tokenizer_multiplier": 1.3
   },
   "claude-sonnet-4.6": {
    "input": 3,
@@ -220,7 +225,6 @@
    "cache_write_1h": 10,
    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
    "read": "2026-11-25 (corpo da pagina oficial, tabela Model pricing, Claude API, global)",
-   "tokenizer_note": "tokenizador anterior ao 4.7",
    "long_context": "none"
   },
   "claude-haiku-4.5": {
