@@ -13,12 +13,12 @@ What was actually executed (GitHub-hosted runners and local runs). Linux is not 
 | Unit tests, Node 22 | OK | OK | OK | OK |
 | Unit tests, Node 20 | OK | OK (after one rerun) | not run | OK |
 | e2e-native: real Claude Code plugin and real OpenCode 1.19.6 vs fake servers | OK | OK (after one rerun) | OK | OK |
-| bash e2e scripts (same clients) | OK | NOT validated: runner not acquired twice | not yet run (leg added to CI afterwards) | not applicable (bash) |
+| bash e2e scripts (same clients) | OK | OK at 6e57c76 (run #9; not acquired twice at 21bec84) | OK at 6e57c76 (run #9) | not applicable (bash) |
 
 Pre-i18n evidence, kept separate (commit f50909a, run #6): Windows unit 63/63 on Node 20 and 22 and Windows e2e-native OK. All macOS jobs in that run were not acquired.
 Not covered: Claude Code and OpenCode have been exercised against fake model servers only, never against a paid real model. The check that reads the `--model` flag of the claude process uses `/proc` and runs on Linux only.
 
-This table is updated from CI results only. An Intel leg for the bash scripts was added after the table was written; its result is not recorded here yet.
+This table is updated from CI results only. Run #9 (commit 6e57c76, docs and CI only, code unchanged from 21bec84) was green in all 14 jobs, including the bash e2e on macOS arm64 and Intel.
 
 Official client support on Windows (docs read 2026-11-25): Claude Code runs natively on Windows 10 1809+ / Server 2019+ (Git for Windows recommended; without it Claude Code uses PowerShell) - https://code.claude.com/docs/en/setup . OpenCode can run directly on Windows but its documentation recommends WSL - https://opencode.ai/docs/windows-wsl/ .
 
