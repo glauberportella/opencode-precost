@@ -2,6 +2,8 @@
 # Falha do hook no caminho INSTALADO (settings.example.json real, Claude Code pinado 2.1.332, servidor Anthropic FALSO, sem gasto):
 # crash do script, node ausente (127) e travamento (timeout) NAO podem deixar o prompt chegar ao modelo (onFailure:block). Controle: hook saudavel bloqueia por custo; sem gate (sem limite) nada muda.
 set -uo pipefail
+# macOS nao tem `timeout`: usa perl (alarm) quando ausente.
+command -v timeout >/dev/null 2>&1 || timeout() { local s=$1; shift; perl -e 'alarm shift; exec @ARGV or exit 127' "$s" "$@"; }
 R="$(cd "$(dirname "$0")/.." && pwd)"; W=$(mktemp -d); export MOCKDIR=$W HOME=$W/home CLAUDE_CONFIG_DIR=$W/cfg ANTHROPIC_BASE_URL=http://127.0.0.1:4590 ANTHROPIC_API_KEY=sk-ant-fake PRECOST_CONFIG=$W/cfg.json PRECOST_STATE=$W/state
 mkdir -p $HOME $CLAUDE_CONFIG_DIR $W/proj; cd $W/proj; CC="${CLAUDE_BIN:-npx --yes @anthropic-ai/claude-code@2.1.332}"
 (node "$R/scripts/mock-anthropic.mjs" >/dev/null 2>&1 &); sleep 1

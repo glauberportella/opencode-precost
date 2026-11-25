@@ -6,11 +6,11 @@ Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, ace
 
 | Cliente / SO | Linux | macOS | Windows |
 |---|---|---|---|
-| Testes unitarios (63) | OK (Node 20 e 22, CI real) | OK so Node 22 (CI real); Node 20 nao rodou (falha de infraestrutura do GitHub) | NAO validado: CI falhou por problema dos testes (corrigido localmente, ainda nao reexecutado) |
-| Claude Code plugin real (2.1.332, servidor falso) | OK | e2e nao rodou (infra do GitHub) | NAO testado (scripts e2e sao bash) |
-| OpenCode 1.19.6 real (servidor falso) | OK (shim + npm pack) | nao rodou | NAO testado |
+| Testes unitarios (63) | OK (Node 20 e 22, CI real) | OK Node 22 (CI real); Node 20 cancelado 2x por infra do GitHub (inconclusivo) | OK Node 20 e 22 (CI real, runner windows-latest) |
+| Claude Code plugin real (2.1.332, servidor falso) | OK (CI real) | 1a execucao FALHOU (script usava `timeout`, ausente no macOS; corrigido, reexecucao pendente) | NAO testado (scripts e2e sao bash) |
+| OpenCode 1.19.6 real (servidor falso) | OK (CI real, shim + npm pack) | reexecucao pendente | NAO testado |
 
-Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e cobertos por testes unitarios, mas o uso real nessas plataformas com os clientes ainda nao foi provado.
+Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e os testes unitarios passam nas tres plataformas, mas o uso real do Claude Code/OpenCode no macOS e no Windows ainda nao foi provado (Windows nao tem teste ponta a ponta).
 
 ## Instalar por cliente
 
