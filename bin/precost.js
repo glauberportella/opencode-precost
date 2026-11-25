@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { stateDir, configPath } from '../src/paths.js';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { loadPrices } from '../src/pricing.js';
@@ -13,12 +13,13 @@ if (process.argv[2] === 'doctor') {
   const res = doctor({ project, claudeSettings: cs }); for (const r of res) console.log(`[${r.level}] ${r.msg}`);
   process.exit(res.some((r) => r.level === 'FALHA') ? 1 : 0);
 }
+if (process.argv[2] === 'prices' || process.argv[2] === 'update-prices') { const { runPricesCli } = await import('../src/prices-cli.js'); process.exit(await runPricesCli(process.argv[2], process.argv.slice(3))); }
 if (process.argv[2] === 'last') { // ultima mensagem de bloqueio (UX quando o cliente so mostra erro generico)
-  try { console.log((() => { const d = process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost'); const fs = readdirSync(d).filter((f) => /^last-block-/.test(f)).map((f) => [f, statSync(join(d, f)).mtimeMs]).sort((a, b) => b[1] - a[1]); return fs.length ? '(ultimo bloqueio de qualquer sessao: ' + fs[0][0] + ')\n' + readFileSync(join(d, fs[0][0]), 'utf8') : (() => { throw 0; })(); })()); } catch { console.log('precost: sem bloqueio registrado.'); }
+  try { console.log((() => { const d = stateDir(); const fs = readdirSync(d).filter((f) => /^last-block-/.test(f)).map((f) => [f, statSync(join(d, f)).mtimeMs]).sort((a, b) => b[1] - a[1]); return fs.length ? '(ultimo bloqueio de qualquer sessao: ' + fs[0][0] + ')\n' + readFileSync(join(d, fs[0][0]), 'utf8') : (() => { throw 0; })(); })()); } catch { console.log('precost: sem bloqueio registrado.'); }
   process.exit(0);
 }
 if (process.argv[2] === 'estimate' && process.argv[3] && !process.argv[3].startsWith('--')) { // precost estimate "tarefa" [--model m]: usa model do config se existir
-  let cfg = {}; try { cfg = JSON.parse(readFileSync(process.env.PRECOST_CONFIG ?? join(homedir(), '.config', 'precost', 'config.json'), 'utf8')); } catch { /* sem config */ }
+  let cfg = {}; try { cfg = JSON.parse(readFileSync(configPath(), 'utf8')); } catch { /* sem config */ }
   const rest = process.argv.slice(4);
   process.argv.splice(2, 2, '--task', process.argv[3], ...(rest.includes('--model') || !cfg.model ? [] : ['--model', cfg.model]));
 }

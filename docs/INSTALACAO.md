@@ -42,4 +42,4 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 - OpenCode não tem prévia automática antes do modelo; o gate é de ferramenta, não teto de gasto do LLM. Depois da aprovação há uma chamada auxiliar (título) fora da estimativa.
 - Aprovação é arquivo local do mesmo usuário: protege contra gasto acidental, não contra agente com shell.
 - Pior caso de modelo = maior preço do catálogo suportado, rótulo, não garantia.
-- Não verificado: fatura real, PostModelSwitch na sua instalação, subagentes/agendadas, macOS/Windows, preço bruto Carbon/Argon (inferido).
+- Não verificado: fatura real, PostModelSwitch na sua instalação, subagentes/agendadas, preço bruto Carbon/Argon (inferido).

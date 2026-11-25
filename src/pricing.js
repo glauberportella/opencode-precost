@@ -2,10 +2,25 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
+import { userPricesPath } from './paths.js';
+import { validatePrices, tableDate } from './prices-update.js';
+const BUNDLED = fileURLToPath(new URL('../data/prices.json', import.meta.url));
+
+// Sem caminho explicito: usa a tabela do usuario (precost update-prices) se for valida e NAO mais antiga que a embutida;
+// caso contrario a embutida. Caminho explicito (config.prices / --prices) manda e falha se ilegivel.
+function pick(path) {
+  if (path) return { p: path, source: 'explicit' };
+  try {
+    const up = userPricesPath(); const raw = readFileSync(up, 'utf8'); const t = JSON.parse(raw);
+    if (!validatePrices(t)) { const b = JSON.parse(readFileSync(BUNDLED, 'utf8')); if ((tableDate(t) ?? '') >= (tableDate(b) ?? '')) return { p: up, source: 'user', raw }; }
+  } catch { /* sem tabela do usuario ou invalida: embutida */ }
+  return { p: BUNDLED, source: 'bundled' };
+}
 export function loadPrices(path) {
-  const p = path ?? fileURLToPath(new URL('../data/prices.json', import.meta.url));
+  const { p, source } = pick(path);
   const raw = readFileSync(p, 'utf8');
   const prices = JSON.parse(raw);
+  prices._source = { kind: source, path: p };
   prices._hash = createHash('sha256').update(raw).digest('hex').slice(0, 16); // entra no vinculo da aprovacao
   return prices;
 }

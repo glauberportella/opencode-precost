@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { claudeConfigDir } from './paths.js';
 
 // Modelo ativo do Claude Code. O evento do hook NAO traz modelo (observado na 2.1.332), entao a resolucao vem de fontes indiretas.
 // Nenhuma e prova tecnica do modelo do PROXIMO prompt. PRECOST_MODEL e declaracao do operador (aceita sem pior caso; nao forca o request).
@@ -25,7 +25,7 @@ export function modelFromProcessChain(startPid = process.ppid, depth = 8) {
 export function declaredModels({ cwd, env = process.env, config = {} }) {
   const out = [];
   if (env.ANTHROPIC_MODEL) out.push({ model: env.ANTHROPIC_MODEL, source: 'ANTHROPIC_MODEL' });
-  const dirs = [env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')];
+  const dirs = [claudeConfigDir(env)];
   for (const f of [join(dirs[0], 'settings.json'), cwd && join(cwd, '.claude', 'settings.json'), cwd && join(cwd, '.claude', 'settings.local.json')].filter(Boolean)) {
     const s = rj(f); if (!s) continue;
     if (s.model) out.push({ model: s.model, source: `settings do Claude (${f})` });

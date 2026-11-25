@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/track-model.js"] } ] }
+    ],
+    "PostModelSwitch": [
+      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/track-model.js"] } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/userpromptsubmit.js"], "timeout": 20, "onFailure": "block" } ] }
+    ]
+  }
+}

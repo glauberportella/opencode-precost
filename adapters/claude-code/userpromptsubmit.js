@@ -3,12 +3,12 @@
 // Bloqueio: JSON {"decision":"block","reason":...} com exit 0. suppressOriginalPrompt evita repetir o prompt na mensagem.
 // ATENCAO: este evento tambem dispara em prompts automaticos (tarefas agendadas, subagente em segundo plano, mensagem de outra sessao).
 import { readFileSync, existsSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { stateDir as stateDirOf, safeId, configPath as configPathOf } from '../../src/paths.js';
 import { join } from 'node:path';
 
 const block = (text) => { process.stdout.write(JSON.stringify({ decision: 'block', reason: text, hookSpecificOutput: { hookEventName: 'UserPromptSubmit', suppressOriginalPrompt: true } })); process.exit(0); };
-const stateDir = process.env.PRECOST_STATE ?? join(homedir(), '.cache', 'precost');
-const cfgPath = process.env.PRECOST_CONFIG ?? join(homedir(), '.config', 'precost', 'config.json');
+const stateDir = stateDirOf();
+const cfgPath = configPathOf();
 
 // Config: ausente = so informativo (e diz isso); presente mas ilegivel/invalida = FALHA FECHADA (bloqueia).
 let config = {}, hasCfg = false;
@@ -25,7 +25,7 @@ try { ev = JSON.parse(readFileSync(0, 'utf8')); } catch (e) { failure('entrada d
 // Modelo ativo: o evento NAO traz (observado na 2.1.332). Ver src/claude-model.js para fontes comprovadas e nao comprovadas.
 let model, modelSource, proven = false, observed = false, declared = [];
 if (process.env.PRECOST_MODEL) { model = process.env.PRECOST_MODEL; modelSource = 'env PRECOST_MODEL (declaracao do operador, NAO verificada contra o request: nao forca o modelo do Claude; se ele usar outro, o preco aprovado e o do modelo declarado)'; proven = true; }
-if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${ev.session_id}.json`), 'utf8')).model; if (model) { modelSource = 'rastreador (SessionStart/PostModelSwitch; observado, pode estar defasado)'; observed = true; } } catch { /* nao rastreado */ } }
+if (!model) { try { model = JSON.parse(readFileSync(join(stateDir, `model-${safeId(ev.session_id)}.json`), 'utf8')).model; if (model) { modelSource = 'rastreador (SessionStart/PostModelSwitch; observado, pode estar defasado)'; observed = true; } } catch { /* nao rastreado */ } }
 if (!model && ev.transcript_path) { const { lastModel } = await import('../../src/claude-transcript.js'); model = lastModel(ev.transcript_path) ?? undefined; if (model) { modelSource = 'transcript (ultima resposta; observado, nao garante a proxima apos troca de modelo)'; observed = true; } }
 if (!model) { const { modelFromProcessChain } = await import('../../src/claude-model.js'); model = modelFromProcessChain() ?? undefined; if (model) { modelSource = 'flag --model do processo claude (observado no inicio; /model pode ter trocado)'; observed = true; } }
 if (!model) {

@@ -4,7 +4,7 @@
 //  - tool.execute.before: com sessionLimitUsd, LANCA erro quando o gasto real da sessao passa do limite (bloqueio real de ferramenta).
 //  - chat.message: com limitUsd, bloqueia o prompt (throw) e exige 'precost approve CODIGO'; sem limitUsd so registra a previa.
 import { tool } from '@opencode-ai/plugin';
-import { homedir } from 'node:os';
+import { ledgerPath } from '../../src/paths.js';
 import { join } from 'node:path';
 import { loadPrices } from '../../src/pricing.js';
 import { estimate } from '../../src/estimate.js';
@@ -19,7 +19,7 @@ export const PrecostPlugin = async (input = {}, options = {}) => {
   const client = input.client;
   const prices = loadPrices(options.prices);
   const models = options.models ?? Object.keys(prices.models);
-  const ledger = new SessionLedger(options.historyPath ?? join(homedir(), '.local', 'share', 'precost', 'sessions.json'));
+  const ledger = new SessionLedger(options.historyPath ?? ledgerPath());
   const histFor = (modelID) => ledger.list().filter((s) => s.turns > 0 && s.model && s.model === modelID && s.project === input.directory).map((s) => ({ input: s.input, output: s.output, cache_read: s.cache_read, cache_write: s.cache_write, turns: s.turns, peakCtx: s.peakCtx }));
   const histMap = (ms) => Object.fromEntries(ms.map((m) => [m, histFor(m)]));
   const run = (task) => {

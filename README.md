@@ -2,6 +2,31 @@
 
 Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes de codigo (OpenCode e Claude Code), e opcionalmente pede aprovacao explicita quando a faixa alta passa de um limite. Privado, sem chamadas pagas. Primeira release privada v0.2.0, com limites: ver `docs/INSTALACAO.md`, "Limites" e `docs/CAPACIDADES.md`.
 
+## Imagens (execucao real, Linux)
+Capturas geradas a partir de saidas reais. Onde ha modelo, ele e um servidor SIMULADO local (sem custo, sem credencial). Nada abaixo foi executado em macOS ou Windows.
+
+![Previa e bloqueio no Claude Code 2.1.332](docs/img/01-previa-e-bloqueio.png)
+![Aprovacao de uso unico](docs/img/02-aprovacao-uso-unico.png)
+![precost estimate no terminal](docs/img/03-estimate-cli.png)
+![precost update-prices (tabela simulada)](docs/img/04-update-prices.png)
+
+## Atualizar a tabela de precos
+```
+precost prices                                   # tabela em uso, data e idade (aviso se > 30 dias)
+precost update-prices --from ARQUIVO_OU_URL      # valida e mostra o diff (nada e gravado). URL: https obrigatorio
+precost update-prices --from ARQUIVO_OU_URL --yes   # grava em ~/.config/precost/prices.json (Windows: %APPDATA%\precost\prices.json)
+precost update-prices                            # sem --from (e sem PRECOST_PRICES_SOURCE): erro com orientacao, nada muda
+precost update-prices --reset                    # volta para a tabela embutida
+```
+Recusa tabela invalida, mais antiga que a atual, ou com remocao/variacao acima de 5x (use `--force` so depois de conferir a fonte). Roda so na CLI, nunca dentro do hook/plugin. Usa-se a tabela do usuario so se nao for mais antiga que a embutida. Trocar a tabela invalida aprovacoes pendentes. Nao ha URL padrao nem leitura automatica das paginas oficiais de preco: voce indica a fonte (arquivo ou https). Hoje a tabela embutida (`data/prices.json`) e a fonte de referencia; as paginas oficiais citadas em cada modelo continuam sendo a verdade. Confira sempre.
+
+## Plataformas
+- Linux: testado (testes unitarios, Claude Code 2.1.332 e OpenCode 1.19.6 reais contra servidor falso).
+- macOS e Windows: o codigo usa caminhos por plataforma (`src/paths.js`; Windows: `%APPDATA%`/`%LOCALAPPDATA%`) e o hook do Claude Code usa `node` + `args` (sem shell). A matriz de CI (`.github/workflows/ci.yml`) roda os testes unitarios em Ubuntu, macOS e Windows. Ate a CI passar, trate como NAO VERIFICADO. Os scripts `e2e:*` sao bash/pty e rodam so em Linux/macOS.
+
+## Claude Code como plugin
+`claude plugin marketplace add glauberportella/opencode-precost` e `claude plugin install precost@precost-marketplace` (apos o repositorio estar publico). Local: `claude --plugin-dir .`. Testado em Linux com Claude Code 2.1.332 real e servidor falso (`npm run e2e:claude-plugin`). `onFailure:"block"` no hook do plugin: carregado e usado, falha do hook em plugin ainda nao testada.
+
 ## Instalar e testar (reproduzivel)
 ```
 npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)

@@ -1,6 +1,6 @@
 {
   "name": "opencode-precost",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Faixa de custo antes de executar uma tarefa em agentes de codigo (OpenCode, Claude Code). Prototipo.",
   "type": "module",
   "private": true,
@@ -14,7 +14,8 @@
     "e2e:claude-failure": "bash scripts/claude-failure-e2e.sh",
     "e2e:opencode-tui": "python3 scripts/opencode-tui-e2e.py",
     "e2e:claude-tui": "python3 scripts/claude-tui-e2e.py",
-    "e2e:opencode-ledger": "bash scripts/opencode-ledger-e2e.sh"
+    "e2e:opencode-ledger": "bash scripts/opencode-ledger-e2e.sh",
+    "e2e:claude-plugin": "bash scripts/claude-plugin-e2e.sh"
   },
   "engines": {
     "node": ">=20"
@@ -22,5 +23,41 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@opencode-ai/plugin": "1.19.6"
+  },
+  "main": "adapters/opencode/index.js",
+  "exports": {
+    ".": "./adapters/opencode/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "adapters",
+    "bin",
+    "src",
+    "data",
+    "docs",
+    "hooks",
+    ".claude-plugin",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "claude-code",
+    "cost",
+    "budget",
+    "estimate"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glauberportella/opencode-precost.git"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": "1.19.6"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    }
   }
 }
