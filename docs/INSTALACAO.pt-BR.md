@@ -23,13 +23,13 @@ Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.co
 - **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; depois de publicado, `/plugin marketplace add <repo>` e `/plugin install precost@precost-marketplace`. Hooks em `hooks/hooks.json` (fail-closed). Plugin ainda NAO publicado em nenhum marketplace.
 - **Claude Code (manual):** secao 3 abaixo (settings.json).
 - **OpenCode:** `npm i opencode-precost @opencode-ai/plugin@1.19.6` no projeto (pacote ainda nao publicado: use `npm pack` do clone) e o arquivo `.opencode/plugins/precost.js` da secao 4 importando `'opencode-precost'`. So a versao 1.19.6 e aceita; o carregamento apenas por `opencode.json` nao foi verificado.
-- **Primeiro passo em qualquer cliente:** `precost doctor` e depois a tabela de precos: `precost prices` e `precost update-prices --from URL|ARQUIVO` (nao ha URL padrao; sem fonte ele explica como fornecer uma).
+- **Primeiro passo em qualquer cliente:** `precost doctor` e depois a tabela de precos: `precost prices` e `precost update-prices --from URL|ARQUIVO` (sem `--from` usa a fonte padrao: a tabela no `main` do repositorio do projeto, ver PRICES.md; so funciona depois que o repo for publico, ate la falha com HTTP 404, mantem a tabela atual e sai com 1).
 
 ## 1. Obter e testar
 ```
 git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0               # ate a release 0.3.0
-npm ci && npm test                     # 70 testes
+npm ci && npm test                     # 71 testes
 ```
 Testes reais com software de terceiros contra servidores FALSOS locais (sem gasto, baixam versões fixas via npx): `npm run e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui`.
 

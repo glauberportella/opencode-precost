@@ -27,7 +27,7 @@ Official client support on Windows (docs read 2026-11-25): Claude Code runs nati
 ```
 git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0              # until release 0.3.0
-npm ci && npm test                    # 70 tests
+npm ci && npm test                    # 71 tests
 ```
 
 End-to-end tests against real third-party clients and FAKE local servers (no spend; they download pinned versions through npx): `npm run e2e:native` (all systems), or the bash variants `e2e:claude-plugin`, `e2e:claude-plugin-failure`, `e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui` (Linux/macOS).
@@ -67,7 +67,7 @@ node bin/precost.js doctor [--project DIR] [--claude-settings FILE]
 
 ## 6. Prices
 
-`precost prices` shows the table in use. `precost update-prices --from FILE_OR_URL` validates and prints a diff; add `--yes` to write it. There is no default URL: without a source it explains how to provide one.
+`precost prices` shows the table in use. `precost update-prices --from FILE_OR_URL` validates and prints a diff; add `--yes` to write it. Without `--from` it uses the default source, the table on `main` of the project repository (see PRICES.md). That works only once the repository is public; until then it fails with HTTP 404, keeps the current table and exits 1. Use `--from` or `PRECOST_PRICES_SOURCE` for another source.
 
 ## 7. Use
 
@@ -86,3 +86,5 @@ node bin/precost.js doctor [--project DIR] [--claude-settings FILE]
 ## Hook failure in the Claude Code plugin (Linux)
 
 `npm run e2e:claude-plugin-failure` (real Claude Code 2.1.332, `--plugin-dir`, fake server, no spend): a script crash, a missing `node` and a hook timeout do NOT let the prompt reach the model (`onFailure: block`). Negative control: with `onFailure: continue` the prompt goes through.
+
+Note on the e2e scripts: the Claude mock server listens on the fixed port 4590 on 127.0.0.1. After an aborted run, stop the leftover mock process before running again, or the next run can fail for that reason.

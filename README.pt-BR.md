@@ -20,10 +20,10 @@ _Imagem 05: ilustracao do bloqueio (modelo sem preco na tabela) em recorte parci
 precost prices                                   # tabela em uso, data e idade (aviso se > 30 dias)
 precost update-prices --from ARQUIVO_OU_URL      # valida e mostra o diff (nada e gravado). URL: https obrigatorio
 precost update-prices --from ARQUIVO_OU_URL --yes   # grava em ~/.config/precost/prices.json (Windows: %APPDATA%\precost\prices.json)
-precost update-prices                            # sem --from (e sem PRECOST_PRICES_SOURCE): erro com orientacao, nada muda
+precost update-prices                            # fonte padrao: data/prices.json no main do repo do projeto (so funciona depois que o repo for publico; ate la HTTP 404, exit 1, nada muda)
 precost update-prices --reset                    # volta para a tabela embutida
 ```
-Recusa tabela invalida, mais antiga que a atual, ou com remocao/variacao acima de 5x (use `--force` so depois de conferir a fonte). Roda so na CLI, nunca dentro do hook/plugin. Usa-se a tabela do usuario so se nao for mais antiga que a embutida. Trocar a tabela invalida aprovacoes pendentes. Nao ha URL padrao nem leitura automatica das paginas oficiais de preco: voce indica a fonte (arquivo ou https). Hoje a tabela embutida (`data/prices.json`) e a fonte de referencia; as paginas oficiais citadas em cada modelo continuam sendo a verdade. Confira sempre.
+Recusa tabela invalida, mais antiga que a atual, ou com remocao/variacao acima de 5x (use `--force` so depois de conferir a fonte). Roda so na CLI, nunca dentro do hook/plugin. Usa-se a tabela do usuario so se nao for mais antiga que a embutida. Trocar a tabela invalida aprovacoes pendentes. Nao ha leitura automatica das paginas oficiais de preco. A fonte padrao e a tabela publicada no `main` do repositorio do projeto, que so existe depois que o repo for publico (ate la HTTP 404 e nada muda); `--from` ou `PRECOST_PRICES_SOURCE` indicam outra fonte (arquivo ou https). Hoje a tabela embutida (`data/prices.json`) e a fonte de referencia; as paginas oficiais citadas em cada modelo continuam sendo a verdade. Confira sempre.
 
 ## Plataformas
 Matriz do que foi realmente executado (CI real do GitHub + execucao local): ver `docs/INSTALACAO.pt-BR.md`, "Matriz de validacao". Linux nao e validacao de macOS/Windows. O codigo usa caminhos por plataforma (`src/paths.js`; Windows: `%APPDATA%`) e o hook do Claude Code usa `node` + `args` (sem shell). O harness `npm run e2e:native` (Node, sem bash) roda os clientes reais contra servidores falsos em Linux, macOS e Windows.
@@ -34,7 +34,7 @@ Matriz do que foi realmente executado (CI real do GitHub + execucao local): ver 
 ## Instalar e testar (reproduzivel)
 ```
 npm ci            # usa package-lock.json; instala a dependencia de dev @opencode-ai/plugin@1.19.6 (necessaria para o teste do adaptador OpenCode)
-npm test          # 70 testes (saida em ingles e em portugues); sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
+npm test          # 71 testes (saida em ingles e em portugues); sem npm ci o teste do adaptador OpenCode falha por dependencia ausente
 node bin/precost.js doctor   # verifica instalacao local (limite: nao prova que o cliente carregou o hook)
 npm run e2e:opencode          # OpenCode 1.19.6 real, sem modelo: ciclo bloqueio/approve/uso unico (npx opencode-ai@1.19.6)
 npm run e2e:opencode-ledger   # OpenCode 1.19.6 real + provedor FALSO local: evento real do assistente, semantica de tokens/custo

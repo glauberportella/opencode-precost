@@ -50,11 +50,11 @@ In a terminal: `node bin/precost.js estimate "task" --model claude-sonnet-5.5`.
 precost prices                                   # table in use, date, age (warns after 30 days)
 precost update-prices --from FILE_OR_URL         # validates and shows the diff; nothing is written (URL must be https)
 precost update-prices --from FILE_OR_URL --yes   # writes ~/.config/precost/prices.json (Windows: %APPDATA%\precost\prices.json)
-precost update-prices                            # no --from and no PRECOST_PRICES_SOURCE: error with guidance, nothing changes
+precost update-prices                            # default source: data/prices.json on main of the project repo (works only once the repo is public; until then HTTP 404, exit 1, nothing changes)
 precost update-prices --reset                    # back to the bundled table
 ```
 
-It rejects an invalid table, one older than the current one, or one with a removal or a change above 5x (use `--force` only after checking the source). It runs only from the CLI, never inside the hook or plugin. A user table is used only if it is not older than the bundled one. Changing the table invalidates pending approvals. There is **no default URL and no automatic reading of official pricing pages**: you provide the source (file or https URL). Today the bundled `data/prices.json` is the reference; the official pages cited per model remain the source of truth. Always check them.
+It rejects an invalid table, one older than the current one, or one with a removal or a change above 5x (use `--force` only after checking the source). It runs only from the CLI, never inside the hook or plugin. A user table is used only if it is not older than the bundled one. Changing the table invalidates pending approvals. There is **no automatic reading of official pricing pages**. The default source is the table published on `main` of the project repository, which exists only once the repository is public (until then HTTP 404 and nothing changes); `--from` or `PRECOST_PRICES_SOURCE` give another source (file or https URL). Today the bundled `data/prices.json` is the reference; the official pages cited per model remain the source of truth. Always check them.
 
 ## Platforms
 
@@ -64,7 +64,7 @@ What was actually executed is in the matrix in [docs/INSTALLATION.md](docs/INSTA
 
 ```
 npm ci            # installs the dev dependency @opencode-ai/plugin@1.19.6 (needed by the OpenCode adapter test)
-npm test          # 70 unit tests (English and Portuguese output)
+npm test          # 71 unit tests (English and Portuguese output)
 npm run e2e:native            # real Claude Code 2.1.332 and OpenCode 1.19.6 vs fake servers: block, approve, single use, fail closed
 npm run e2e:claude-plugin     # Claude Code plugin cycle (bash, Linux/macOS)
 npm run e2e:claude-plugin-failure   # hook crash / missing node / timeout never reach the model (bash)
