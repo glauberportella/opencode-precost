@@ -43,3 +43,9 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 - Aprovação é arquivo local do mesmo usuário: protege contra gasto acidental, não contra agente com shell.
 - Pior caso de modelo = maior preço do catálogo suportado, rótulo, não garantia.
 - Não verificado: fatura real, PostModelSwitch na sua instalação, subagentes/agendadas, preço bruto Carbon/Argon (inferido).
+
+## Estado da instalacao no OpenCode (verificado em Linux, OpenCode 1.19.6)
+
+- Verificado: `npm i opencode-precost @opencode-ai/plugin` + `.opencode/plugins/precost.js` importando `'opencode-precost'` carrega o plugin e bloqueia a mensagem (teste com provedor inexistente).
+- NAO verificado: carregar so por `opencode.json` (chave `plugin` com o nome do pacote). Nos testes o plugin nao foi carregado assim. A chave `plugins` e ignorada pelo 1.19.6. Use o shim acima.
+- O pacote ainda nao esta publicado no npm; o teste usou o tarball de `npm pack`.
