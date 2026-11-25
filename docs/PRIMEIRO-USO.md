@@ -21,7 +21,7 @@ Sem dependencias para a CLI. Para rodar os testes: `npm ci && npm test` (47 test
 `docs/exemplos/bloqueio-hook.txt` e `ciclo-aprovacao-hook-simulado.txt`: bloqueio, `precost approve CODIGO`, reenvio permitido uma vez, reenvio seguinte bloqueado. Configuracao: `~/.config/precost/config.json` com `{"model":"claude-sonnet-5.5","limitUsd":5}` e o hook de `adapters/claude-code/settings.example.json`.
 
 ## Limites atuais
-Estimativa, nao custo. Gate age antes do prompt, nao limita o gasto da tarefa. OpenCode so 1.19.6 (bloqueio por throw nao documentado). Claude Code e toast/TUI do OpenCode nao testados em ferramenta real. Estado de aprovacao em arquivo do mesmo usuario. Carbon/Argon: preco bruto inferido. Historico real nao validado.
+Estimativa, nao custo. Gate age antes do prompt, nao limita o gasto da tarefa. OpenCode so 1.19.6 (bloqueio por throw nao documentado). Claude Code real testado so em `-p` e contra servidor falso; modo interativo e toast/TUI do OpenCode nao verificados. Estado de aprovacao em arquivo do mesmo usuario. Carbon/Argon: preco bruto inferido. Historico real nao validado.
 
 ## Proximos passos concretos
 1. Rodar uma vez no Claude Code real (usuario aceita) e registrar se o motivo do bloqueio aparece e se SessionStart traz o modelo.

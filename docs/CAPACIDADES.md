@@ -61,3 +61,12 @@ Reenviar o mesmo prompt nao aprova. Para aprovar: digitar `precost approve CODIG
 
 ## Atualizacao 5
 - Regressao do revisor (ledger com 3.7 ~10k e 3.8 ~400k, mesmo projeto): tool, gate com compare e preview usam o historico de cada modelo (3.8 >20x 3.7 nos tres caminhos). A CLI recusa `--history` em lista quando ha varios modelos (exige mapa por modelo). 47 testes.
+
+## Atualizacao 6 (validacao real contra servidores falsos, 25/nov/2026)
+Sem chamada paga e sem credencial real: Claude Code 2.1.332 e OpenCode 1.19.6 reais, instalados so no sandbox, apontados para servidores locais falsos (`scripts/mock-anthropic.mjs`, `scripts/mock-openai.mjs`). Logs em `docs/evidence/`.
+- **Claude Code REAL (`npm run e2e:claude`)**: `UserPromptSubmit` recebe `prompt`, `session_id`, `transcript_path`, `cwd`, `permission_mode` (docs/evidence/claude-code-2.1.332-userpromptsubmit-input.json). **Nao traz modelo**, e `SessionStart` (modo -p) tambem nao. Bloqueio por `decision: block` NAO chama o modelo (contador do servidor falso 0), o texto aparece em `claude -p`; approve, reenvio permitido (1 chamada), uso unico e `precost estimate` funcionaram; o modelo passa a vir da ultima resposta do transcript e corrige um `config.model` divergente a partir da 2a mensagem. `--resume` preserva o `session_id`, entao a aprovacao vale na mesma sessao.
+- **Nao verificado no Claude Code**: modo interativo (TUI), `PostModelSwitch` (nao ocorreu em `-p`), subagentes e tarefas agendadas.
+- **OpenCode REAL com provedor falso (`npm run e2e:opencode-ledger`)**: evento `message.updated` real do assistente: `tokens.input` EXCLUI `cache.read`; custo = input*preco + output*preco + cache_read*preco do config do OpenCode; pico por chamada = input + cache.read = prompt_tokens. O ledger bate (inclusive modelo e projeto).
+- **Transcripts do Claude Code**: linhas `assistant` com `message.id/model/usage` (`input_tokens` exclui cache; `cache_read_input_tokens`; `cache_creation_input_tokens`). Formato lido de uma sessao real em 2.1.332, usado para modelo ativo e historico (dedup por `message.id`, maior valor). Os valores de uso vieram do servidor falso, entao a comparacao com fatura real segue pendente.
+- **Premissa de sistema medida em bytes**: corpo da requisicao do Claude Code = 48.919 bytes e do OpenCode = 32.576 bytes para prompts de poucos caracteres (docs/evidence/*requests.log). Convertidos por chars/4: ~12,2K e ~8,1K tokens. Padroes: 13K (Claude Code) e 8K (OpenCode). CLAUDE.md, MCPs e skills do usuario aumentam isso.
+- 49 testes.

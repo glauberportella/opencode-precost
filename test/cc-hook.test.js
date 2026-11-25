@@ -168,3 +168,16 @@ test('regressao: precost last e escopado por sessao (nao mostra codigo de outra 
   assert.match(submit(e, 'precost last', 's1').reason, new RegExp(code));
   const o = submit(e, 'precost last', 's2'); assert.doesNotMatch(o.reason, new RegExp(code)); assert.match(o.reason, /nesta sessao/);
 });
+import { cpSync, mkdirSync as mk2 } from 'node:fs';
+test('hook usa historico REAL dos transcripts do projeto (5+ sessoes do modelo ativo) e o modelo da ultima resposta', () => {
+  const e = mkenv({ model: 'claude-opus-5.5', limitUsd: 1000 });
+  const dir = join(e.dir, 'projects', 'p'); mk2(dir, { recursive: true });
+  const fx = new URL('./fixtures/claude-projects/proj/real-shape.jsonl', import.meta.url).pathname;
+  for (let i = 0; i < 6; i++) cpSync(fx, join(dir, `old-${i}.jsonl`));
+  const cur = join(dir, 'cur.jsonl'); cpSync(fx, cur);
+  const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x', transcript_path: cur }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
+  const m = JSON.parse(r.stdout).systemMessage;
+  assert.match(m, /modelo ativo: claude-sonnet-5\.5/); assert.match(m, /transcript \(ultima resposta\)/); assert.match(m, /base: historico/);
+  const sem = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x' }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
+  assert.match(JSON.parse(sem.stdout).systemMessage, /modelo ativo: claude-opus-5\.5/); // sem transcript: config
+});

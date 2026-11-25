@@ -33,6 +33,7 @@ const blockCfg = (why) => ({ action: 'block', command: 'config', text: `precost:
 export function validateConfig(config = {}) {
   if (config.limitUsd !== undefined && config.limitUsd !== null && !(typeof config.limitUsd === 'number' && Number.isFinite(config.limitUsd) && config.limitUsd >= 0)) return `limitUsd deve ser numero >= 0, recebido ${JSON.stringify(config.limitUsd)}`;
   if (config.ttlMin !== undefined && !(typeof config.ttlMin === 'number' && Number.isFinite(config.ttlMin) && config.ttlMin > 0)) return `ttlMin deve ser numero > 0, recebido ${JSON.stringify(config.ttlMin)}`;
+  if (config.systemTokens !== undefined && !(typeof config.systemTokens === 'number' && Number.isFinite(config.systemTokens) && config.systemTokens >= 0)) return 'systemTokens deve ser numero >= 0';
   if (config.cacheHit !== undefined && !(typeof config.cacheHit === 'number' && config.cacheHit >= 0 && config.cacheHit <= 1)) return 'cacheHit deve estar entre 0 e 1';
   return null;
 }
@@ -50,7 +51,7 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   }
   if ((m = PREVIEW.exec(prompt))) { // previa sob demanda: digitada pelo usuario, nunca chega ao modelo, sem gasto
     let prices0; try { prices0 = loadPrices(config.prices); } catch (e) { return blockCfg(`tabela de precos ilegivel: ${e.message}`); }
-    const r0 = estimate({ task: m[1], models: [model, ...(config.compare ?? [])].filter(Boolean).length ? [model, ...(config.compare ?? [])].filter(Boolean) : Object.keys(prices0.models), prices: prices0, history, cacheHit: config.cacheHit ?? 0 });
+    const r0 = estimate({ systemTokens: config.systemTokens, task: m[1], models: [model, ...(config.compare ?? [])].filter(Boolean).length ? [model, ...(config.compare ?? [])].filter(Boolean) : Object.keys(prices0.models), prices: prices0, history, cacheHit: config.cacheHit ?? 0 });
     return { action: 'block', command: 'preview', text: format(r0, { title: `Previa sob demanda (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'}). Nada foi enviado ao modelo.` }) };
   }
   if ((m = REVOKE.exec(prompt))) {
@@ -80,7 +81,7 @@ export function decide({ prompt, model, session, config = {}, stateDir, now = Da
   const limit = config.limitUsd;
   const gated = typeof limit === 'number';
   const models = [model, ...(config.compare ?? [])].filter(Boolean);
-  const res = estimate({ task: prompt, fileTexts: files.filter((f) => f.text !== undefined).map((f) => f.text), models: models.length ? models : Object.keys(prices.models), prices, history, cacheHit: config.cacheHit ?? 0 });
+  const res = estimate({ systemTokens: config.systemTokens, task: prompt, fileTexts: files.filter((f) => f.text !== undefined).map((f) => f.text), models: models.length ? models : Object.keys(prices.models), prices, history, cacheHit: config.cacheHit ?? 0 });
   const active = model ? res.rows.find((r) => r.model === model && !r.error) : null;
   const skipped = files.filter((f) => f.skipped);
   let text = format(res, { title: `Previa de custo (ESTIMATIVA; modelo ativo: ${model ?? 'desconhecido'})` });

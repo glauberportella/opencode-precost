@@ -108,3 +108,15 @@ test('regressao: mapa de historico por modelo (linhas comparadas nao se misturam
   const r = estimate({ task: 'x', models: ['gemini-3.5-flash', 'gemini-3.5-flash-lite'], prices, history: { 'gemini-3.5-flash': h } });
   assert.equal(r.rows[0].basis.kind, 'historico'); assert.equal(r.rows[1].basis.kind, 'premissas'); assert.equal(r.basis.kind, 'mista');
 });
+
+import { lastModel, historyFromDir } from '../src/claude-transcript.js';
+import { fileURLToPath } from 'node:url';
+const FX = fileURLToPath(new URL('./fixtures/claude-projects/proj', import.meta.url));
+test('transcript do Claude Code (formato real v2.1.332): ultimo modelo e historico por modelo, input exclui cache', () => {
+  assert.equal(lastModel(`${FX}/real-shape.jsonl`), 'claude-sonnet-5.5');
+  assert.equal(lastModel('/nao/existe.jsonl'), null);
+  const h = historyFromDir(FX, { model: 'claude-sonnet-5-5-20261001', prices });
+  assert.equal(h.length, 1); assert.equal(h[0].input, 1034); assert.equal(h[0].cache_read, 200); assert.equal(h[0].peakCtx, 1234); assert.equal(h[0].turns, 1);
+  assert.deepEqual(historyFromDir(FX, { model: 'claude-opus-5.5', prices }), []);   // outro modelo: nada
+  assert.deepEqual(historyFromDir(FX, { model: 'modelo-x', prices }), []);          // sem preco: nada
+});
