@@ -1,15 +1,143 @@
 {
-  "_comment": "USD por 1M de tokens, tier Standard, ate 200K de contexto por chamada. Sem dado = campo ausente (nunca zero). Edite ou sobrescreva com --prices.",
-  "currency": "USD",
-  "models": {
-    "gemini-3.1-flash-lite": { "input": 0.25, "output": 1.50, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
-    "gemini-3.5-flash-lite": { "input": 0.30, "output": 2.50, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
-    "gemini-3.8-flash": {
-      "input": 0.75, "output": 3.75,
-      "changes": [{ "from": "2027-01-01", "input": 1.50, "output": 7.50, "note": "promocao ate 31/dez/2026 segundo a analise anterior" }],
-      "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)"
-    },
-    "gemini-4-hydrogen": { "input": 1.50, "output": 7.50, "cache_read": 0.075, "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" },
-    "gemini-4-neon": { "input": 3.00, "output": 15.00, "cache_read": 0.15, "access_note": "pagina oficial cita 'verified enterprise customers in select regions'", "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing", "read": "2026-11-25 (analise Gemini Global; confirmar na pagina)" }
+ "_comment": "USD por 1M de tokens, Standard, Global, entrada <=200K. Campo ausente = desconhecido (nunca zero). Reasoning e cobrado como saida. Gemini 4: tabela nao traz faixa >200K (desconhecido). Cache write: nao modelado (so preco vigente a partir da data indicada; antes disso a pagina nao informa). Precos de Anthropic/OpenAI nao verificados: nao incluidos.",
+ "currency": "USD",
+ "long_context_threshold_tokens": 200000,
+ "models": {
+  "gemini-3.1-flash-lite": {
+   "input": 0.25,
+   "output": 1.5,
+   "cache_read": 0.025,
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.5-flash-lite": {
+   "input": 0.3,
+   "output": 2.5,
+   "cache_read": 0.03,
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.5-flash": {
+   "input": 1.5,
+   "output": 9.0,
+   "cache_read": 0.15,
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.6-flash": {
+   "input": 0.75,
+   "output": 3.75,
+   "cache_read": 0.075,
+   "changes": [
+    {
+     "from": "2027-01-01",
+     "input": 1.5,
+     "output": 7.5,
+     "cache_read": 0.15,
+     "note": "preco introdutorio ate 31/dez/2026"
+    }
+   ],
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.7-flash": {
+   "input": 0.75,
+   "output": 3.75,
+   "cache_read": 0.075,
+   "changes": [
+    {
+     "from": "2027-01-01",
+     "input": 1.5,
+     "output": 7.5,
+     "cache_read": 0.15,
+     "note": "preco introdutorio ate 31/dez/2026"
+    }
+   ],
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.8-flash": {
+   "input": 0.75,
+   "output": 3.75,
+   "cache_read": 0.075,
+   "changes": [
+    {
+     "from": "2027-01-01",
+     "input": 1.5,
+     "output": 7.5,
+     "cache_read": 0.15,
+     "note": "preco introdutorio ate 31/dez/2026"
+    }
+   ],
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-3.1-pro-preview": {
+   "input": 2.0,
+   "output": 12.0,
+   "cache_read": 0.2,
+   "long_context": {
+    "input": 4.0,
+    "output": 18.0,
+    "cache_read": 0.4
+   },
+   "note": "acima de 200K tokens de entrada na consulta, TODOS os tokens usam taxa longa",
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-4-hydrogen": {
+   "input": 1.5,
+   "output": 7.5,
+   "cache_read": 0.075,
+   "cache_write": 1.875,
+   "cache_write_from": "2027-01-12",
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-4-neon": {
+   "input": 3.0,
+   "output": 15.0,
+   "cache_read": 0.15,
+   "cache_write": 3.75,
+   "cache_write_from": "2027-01-12",
+   "access_note": "pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado",
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-4-carbon": {
+   "input": 2.0,
+   "output": 10.0,
+   "cache_read": 0.1,
+   "promo_credit": "preco efetivo com creditos de 50% de volta sobre gasto liquido ate 30/nov/2026; nao e o valor da fatura",
+   "changes": [
+    {
+     "from": "2026-12-01",
+     "input": 4.0,
+     "output": 20.0,
+     "cache_read": 0.2,
+     "promo_credit": null
+    }
+   ],
+   "access_note": "mesmo aviso de acesso enterprise do Neon (analise anterior)",
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
+  },
+  "gemini-4-argon": {
+   "input": 2.0,
+   "output": 10.0,
+   "cache_read": 0.1,
+   "promo_credit": "preco efetivo com creditos de 50% de volta sobre gasto liquido ate 30/nov/2026; nao e o valor da fatura",
+   "changes": [
+    {
+     "from": "2026-12-01",
+     "input": 4.0,
+     "output": 20.0,
+     "cache_read": 0.2,
+     "promo_credit": null
+    }
+   ],
+   "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+   "read": "2026-11-25 (corpo da pagina oficial, tabela Standard, Global)"
   }
+ }
 }

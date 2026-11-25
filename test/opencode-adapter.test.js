@@ -11,7 +11,7 @@ const asst = (id, cost, input, output) => ({ type: 'message.updated', properties
 test('tool precost_estimate devolve previa', async () => {
   const p = await mk({ models: ['gemini-4-hydrogen'] });
   const out = await p.tool.precost_estimate.execute({ task: 'adicionar testes' }, {});
-  assert.match(String(out.output ?? out), /CONHECIDO/);
+  assert.match(String(out.output ?? out), /OBSERVADO/);
 });
 test('evento acumula gasto real, dedup por id; tool.execute.before bloqueia acima do limite', async () => {
   const p = await mk({ sessionLimitUsd: 1 });

@@ -1,0 +1,11 @@
+HOOK:event "session.created"
+HOOK:event "session.updated"
+HOOK:chat.message ""
+LOG:Previa de custo (ESTIMATIVA)
+HOOK:event "message.updated"
+HOOK:event "message.part.updated"
+HOOK:event "session.updated"
+HOOK:event "session.status"
+HOOK:event "session.error"
+HOOK:event "session.status"
+HOOK:event "session.idle"

@@ -1,0 +1,37 @@
+Previa de custo (ESTIMATIVA; modelo ativo: gemini-4-neon)
+OBSERVADO: 26 caracteres (prompt 26 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8007 tokens = prompt ~7 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: premissas): sem historico: tres cenarios com premissas fixas, nao medidas.
+- gemini-4-neon: contexto inicial ~US$0.02 (estimado); tarefa US$0.28 a US$25.85 (meio US$2.51) [contexto >200K: tabela nao traz taxa longa (desconhecido); acesso: pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado; cache write (US$3.75/1M a partir de 2027-01-12) nao modelado]
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.
+
+BLOQUEADO: teto estimado 25.85 acima do limite US$0.5. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo e com estes precos, digite exatamente: precost approve 7ff28544 (vale 10 min, uso unico). Depois reenvie o prompt sem alteracao.
+=====
+Previa de custo (ESTIMATIVA; modelo ativo: gemini-4-neon)
+OBSERVADO: 26 caracteres (prompt 26 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8007 tokens = prompt ~7 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: premissas): sem historico: tres cenarios com premissas fixas, nao medidas.
+- gemini-4-neon: contexto inicial ~US$0.02 (estimado); tarefa US$0.28 a US$25.85 (meio US$2.51) [contexto >200K: tabela nao traz taxa longa (desconhecido); acesso: pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado; cache write (US$3.75/1M a partir de 2027-01-12) nao modelado]
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.
+
+BLOQUEADO: teto estimado 25.85 acima do limite US$0.5. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo e com estes precos, digite exatamente: precost approve 6b5e3850 (vale 10 min, uso unico). Depois reenvie o prompt sem alteracao.
+=====
+precost: aprovado por 10 min, uso unico. Agora reenvie o prompt original sem alteracao.
+=====
+Previa de custo (ESTIMATIVA; modelo ativo: gemini-4-neon)
+OBSERVADO: 26 caracteres (prompt 26 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8007 tokens = prompt ~7 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: premissas): sem historico: tres cenarios com premissas fixas, nao medidas.
+- gemini-4-neon: contexto inicial ~US$0.02 (estimado); tarefa US$0.28 a US$25.85 (meio US$2.51) [contexto >200K: tabela nao traz taxa longa (desconhecido); acesso: pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado; cache write (US$3.75/1M a partir de 2027-01-12) nao modelado]
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.
+(aprovacao 7ff28544 consumida)
+=====
+Previa de custo (ESTIMATIVA; modelo ativo: gemini-4-neon)
+OBSERVADO: 26 caracteres (prompt 26 + arquivos 0).
+CONTEXTO INICIAL ESTIMADO: ~8007 tokens = prompt ~7 + arquivos ~0 (chars/4 (aproximado; tokenizer do provedor pode diferir)) + 8000 de sistema/ferramentas (PREMISSA, nao medida).
+TAREFA COMPLETA (base: premissas): sem historico: tres cenarios com premissas fixas, nao medidas.
+- gemini-4-neon: contexto inicial ~US$0.02 (estimado); tarefa US$0.28 a US$25.85 (meio US$2.51) [contexto >200K: tabela nao traz taxa longa (desconhecido); acesso: pagina de docs cita 'verified enterprise customers in select regions' (analise anterior); acesso real na conta nao verificado; cache write (US$3.75/1M a partir de 2027-01-12) nao modelado]
+Nada aqui e custo conhecido nem garantia: o agente ainda explora arquivos, roda testes e pode refazer trabalho.
+
+BLOQUEADO: teto estimado 25.85 acima do limite US$0.5. Reenviar o prompt NAO aprova. Para aprovar este prompt, neste modelo e com estes precos, digite exatamente: precost approve a69bbdc3 (vale 10 min, uso unico). Depois reenvie o prompt sem alteracao.
+=====

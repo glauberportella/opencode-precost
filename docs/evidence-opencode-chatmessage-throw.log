@@ -1,0 +1,3 @@
+event session.created
+event session.updated
+chat.message THROW
