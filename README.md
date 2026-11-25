@@ -9,6 +9,9 @@ Capturas geradas a partir de saidas reais. Onde ha modelo, ele e um servidor SIM
 ![Aprovacao de uso unico](docs/img/02-aprovacao-uso-unico.png)
 ![precost estimate no terminal](docs/img/03-estimate-cli.png)
 ![precost update-prices (tabela simulada)](docs/img/04-update-prices.png)
+![OpenCode 1.19.6 TUI com precost (modelo simulado)](docs/img/05-opencode-tui.png)
+
+_Imagem 05: ilustracao do bloqueio (modelo sem preco na tabela) em recorte parcial reconstruido da TUI real; nao e screenshot integral nem prova visual do fluxo de aprovacao no OpenCode._
 
 ## Atualizar a tabela de precos
 ```
@@ -56,3 +59,7 @@ npm run e2e:claude            # Claude Code 2.1.332 REAL + servidor Anthropic FA
 - Precos: Gemini via cloud.google.com/vertex-ai/generative-ai/pricing, Claude via platform.claude.com/docs/en/about-claude/pricing, lidos em 25/nov/2026. Carbon/Argon: bruto inferido. Nao modelados: Batch, Priority, Fast mode, residencia de dados.
 - Historico: so sessoes do mesmo modelo e projeto, minimo 5. Semantica dos tokens validada com eventos/transcripts reais de OpenCode e Claude Code contra provedores FALSOS (sem fatura real): `input` exclui o cache. Comparacao com fatura real ainda nao feita.
 - Premissa de sistema: 8k tokens no OpenCode e 13k no Claude Code, a partir do tamanho medido do corpo da requisicao (32,6 KB e 48,9 KB para um prompt de 3 a 9 caracteres) convertido por chars/4; nao e contagem de tokens do provedor.
+
+## Licenca
+
+MIT. Veja [LICENSE](LICENSE). Copyright (c) 2026 Glauber Portella.

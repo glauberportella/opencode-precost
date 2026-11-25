@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -5,8 +6,8 @@ import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const hook = new URL('../adapters/claude-code/userpromptsubmit.js', import.meta.url).pathname;
-const tracker = new URL('../adapters/claude-code/track-model.js', import.meta.url).pathname;
+const hook = fileURLToPath(new URL('../adapters/claude-code/userpromptsubmit.js', import.meta.url));
+const tracker = fileURLToPath(new URL('../adapters/claude-code/track-model.js', import.meta.url));
 const mkenv = (cfg) => { const dir = mkdtempSync(join(tmpdir(), 'pc-')); const c = join(dir, 'c.json'); writeFileSync(c, JSON.stringify(cfg)); return { dir, c, st: join(dir, 'st') }; };
 const submit = (e, prompt, session = 's1', extraEnv = {}) => {
   const r = spawnSync('node', [hook], { input: JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: session, prompt }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st, ...extraEnv }, encoding: 'utf8' });
@@ -172,7 +173,7 @@ import { cpSync, mkdirSync as mk2 } from 'node:fs';
 test('hook usa historico REAL dos transcripts do projeto (5+ sessoes do modelo ativo) e o modelo da ultima resposta', () => {
   const e = mkenv({ model: 'claude-opus-5.5', limitUsd: 1000 });
   const dir = join(e.dir, 'projects', 'p'); mk2(dir, { recursive: true });
-  const fx = new URL('./fixtures/claude-projects/proj/real-shape.jsonl', import.meta.url).pathname;
+  const fx = fileURLToPath(new URL('./fixtures/claude-projects/proj/real-shape.jsonl', import.meta.url));
   for (let i = 0; i < 6; i++) cpSync(fx, join(dir, `old-${i}.jsonl`));
   const cur = join(dir, 'cur.jsonl'); cpSync(fx, cur);
   const r = spawnSync('node', [hook], { input: JSON.stringify({ session_id: 'cur', prompt: 'x', transcript_path: cur }), env: { ...process.env, PRECOST_CONFIG: e.c, PRECOST_STATE: e.st }, encoding: 'utf8' });
@@ -227,7 +228,7 @@ test('troca /model no transcript depois da ultima resposta: modelo observado NAO
 
 test('precost doctor: acha hook com onFailure block, acusa onFailure ausente e arquivo inexistente, executa o hook local, e diz o limite', () => {
   const d = mkdtempSync(join(tmpdir(), 'doc-')); mkdirSync(join(d, '.claude'));
-  const bin = new URL('../bin/precost.js', import.meta.url).pathname; const root = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+  const bin = fileURLToPath(new URL('../bin/precost.js', import.meta.url)); const root = fileURLToPath(new URL('..', import.meta.url)).replace(/[\\/]$/, '');
   const run = (hooks) => { writeFileSync(join(d, '.claude', 'settings.json'), JSON.stringify({ hooks })); return spawnSync('node', [bin, 'doctor', '--project', d], { env: { ...process.env, PRECOST_CONFIG: join(d, 'c.json'), CLAUDE_CONFIG_DIR: join(d, 'nada') }, encoding: 'utf8' }); };
   writeFileSync(join(d, 'c.json'), JSON.stringify({ model: 'claude-sonnet-5.5', limitUsd: 5 }));
   const good = run({ UserPromptSubmit: [{ hooks: [{ type: 'command', command: `node ${root}/adapters/claude-code/userpromptsubmit.js`, onFailure: 'block' }] }] });

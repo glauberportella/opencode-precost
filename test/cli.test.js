@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -5,7 +6,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const cli = new URL('../bin/precost.js', import.meta.url).pathname;
+const cli = fileURLToPath(new URL('../bin/precost.js', import.meta.url));
 const sess = (n) => Array.from({ length: 5 }, () => ({ input: n, output: 100, cache_read: 0, turns: 5, peakCtx: 50_000 }));
 const run = (args, hist) => { const d = mkdtempSync(join(tmpdir(), 'cli-')); const f = join(d, 'h.json'); writeFileSync(f, JSON.stringify(hist)); return spawnSync('node', [cli, '--task', 'x', ...args, '--history', f], { encoding: 'utf8' }); };
 test('CLI compare: historico como lista com varios modelos e recusado; mapa usa cada linha so com o seu', () => {

@@ -1,12 +1,29 @@
-# Instalação e verificação (v0.2.0, repositório privado, Linux)
+# Instalação e verificação (v0.3.0-dev, repositório privado)
 
 Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, acesso ao repositório privado.
+
+## Matriz de validacao (o que foi realmente executado)
+
+| Cliente / SO | Linux | macOS | Windows |
+|---|---|---|---|
+| Testes unitarios (63) | OK (Node 20 e 22, CI real) | OK so Node 22 (CI real); Node 20 nao rodou (falha de infraestrutura do GitHub) | NAO validado: CI falhou por problema dos testes (corrigido localmente, ainda nao reexecutado) |
+| Claude Code plugin real (2.1.332, servidor falso) | OK | e2e nao rodou (infra do GitHub) | NAO testado (scripts e2e sao bash) |
+| OpenCode 1.19.6 real (servidor falso) | OK (shim + npm pack) | nao rodou | NAO testado |
+
+Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.config/precost` no Linux/macOS, `%APPDATA%\precost` no Windows) estao implementados e cobertos por testes unitarios, mas o uso real nessas plataformas com os clientes ainda nao foi provado.
+
+## Instalar por cliente
+
+- **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; depois de publicado, `/plugin marketplace add <repo>` e `/plugin install precost`. Hooks em `hooks/hooks.json` (fail-closed). Plugin ainda NAO publicado em nenhum marketplace.
+- **Claude Code (manual):** secao 3 abaixo (settings.json).
+- **OpenCode:** `npm i opencode-precost @opencode-ai/plugin@1.19.6` no projeto (pacote ainda nao publicado: use `npm pack` do clone) e o arquivo `.opencode/plugins/precost.js` da secao 4 importando `'opencode-precost'`. So a versao 1.19.6 e aceita; o carregamento apenas por `opencode.json` nao foi verificado.
+- **Primeiro passo em qualquer cliente:** `precost doctor` e depois a tabela de precos: `precost prices` e `precost update-prices --from URL|ARQUIVO` (nao ha URL padrao; sem fonte ele explica como fornecer uma).
 
 ## 1. Obter e testar
 ```
 git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
-git checkout v0.2.0
-npm ci && npm test                     # 54 testes
+git checkout dev/0.3.0               # ate a release 0.3.0
+npm ci && npm test                     # 63 testes
 ```
 Testes reais com software de terceiros contra servidores FALSOS locais (sem gasto, baixam versões fixas via npx): `npm run e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui`.
 
@@ -49,3 +66,7 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 - Verificado: `npm i opencode-precost @opencode-ai/plugin` + `.opencode/plugins/precost.js` importando `'opencode-precost'` carrega o plugin e bloqueia a mensagem (teste com provedor inexistente).
 - NAO verificado: carregar so por `opencode.json` (chave `plugin` com o nome do pacote). Nos testes o plugin nao foi carregado assim. A chave `plugins` e ignorada pelo 1.19.6. Use o shim acima.
 - O pacote ainda nao esta publicado no npm; o teste usou o tarball de `npm pack`.
+
+## Falha do hook no plugin Claude Code (verificado em Linux)
+
+`npm run e2e:claude-plugin-failure` (Claude Code 2.1.332 real, `--plugin-dir`, servidor falso, sem gasto): crash do script, `node` ausente e travamento (timeout) do hook NAO deixam o prompt chegar ao modelo (`onFailure: block`). Controle negativo: com `onFailure: continue` o prompt passa. Nao testado em macOS/Windows.
