@@ -27,7 +27,7 @@ Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.co
 
 ## 1. Obter e testar
 ```
-git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
+git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0               # ate a release 0.3.0
 npm ci && npm test                     # 71 testes
 ```
