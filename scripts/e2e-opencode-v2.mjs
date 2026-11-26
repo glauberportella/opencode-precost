@@ -2,7 +2,7 @@
 // Uso: node scripts/e2e-opencode-v2.mjs   (OPENCODE_V2_CMD sobrescreve o comando; padrao: npx --yes @opencode/cli@2.4.2)
 // Verifica: plugin V2 carrega, bloqueio (0 chamadas ao mock), approve, reenvio chega ao provedor, uso unico, falha fechada em versao nao verificada.
 import { spawn, spawnSync } from 'node:child_process';
-import { rmSync, copyFileSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { rmSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -72,7 +72,7 @@ try {
   writePlugin('', 1000);
   const S3 = 'ses_precoste2g' + Date.now().toString(36);
   writeFileSync(join(P, 'small.txt'), 'hello');
-  copyFileSync('/tmp/img.png', join(P, 'pic.png'));
+  writeFileSync(join(P, 'pic.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
   b = calls(); run(S3, 'read this', '-f small.txt'); chk('9 anexo pequeno contado: passa (>=1)', calls() - b >= 1, true);
   b = calls(); run(S3, 'read the image', '-f pic.png'); chk('10 anexo binario/imagem nao contado: bloqueado (0)', calls() - b, 0);
   chk('10 aviso de arquivo nao contado no log', /NOT counted|larger than/.test(log()), true);
