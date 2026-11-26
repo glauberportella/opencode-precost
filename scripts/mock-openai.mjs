@@ -1,6 +1,6 @@
 import http from 'node:http'; import { appendFileSync } from 'node:fs';
 http.createServer((req,res)=>{let b='';req.on('data',c=>b+=c);req.on('end',()=>{
- appendFileSync(process.env.MOCKLOG,`${req.method} ${req.url} ${b.length}\n`);
+ appendFileSync(process.env.MOCKLOG,`${req.method} ${req.url} ${b.length} model=${(/"model":"([^"]*)"/.exec(b) || [])[1]}\n`);
  if(req.url.endsWith('/chat/completions')){ let j={};try{j=JSON.parse(b)}catch{}
   const mk=(d,extra={})=>`data: ${JSON.stringify({id:'c1',object:'chat.completion.chunk',created:1,model:j.model,choices:[d],...extra})}\n\n`;
   res.writeHead(200,{'content-type':'text/event-stream'});

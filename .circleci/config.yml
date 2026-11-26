@@ -1,7 +1,7 @@
 version: 2.1
 
 # Free plan: Linux x86 (Docker), Windows Server 2022 and macOS Apple Silicon (m4pro.medium).
-# There is no macOS Intel on CircleCI (deprecated in 2024). Real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake local servers: no paid calls.
+# There is no macOS Intel on CircleCI (deprecated in 2024). Real Claude Code 2.1.332, opencode-ai 1.19.6 and @opencode/cli 2.4.2 against fake local servers: no paid calls.
 orbs:
   win: circleci/windows@5.0
 
@@ -12,6 +12,10 @@ commands:
       - run: npm ci
       - run: npm test
       - run: npm run e2e:packaged
+      - run:
+          name: OpenCode 2.4.2 real client, clean tarball, fake model
+          command: E2E_PACKED=1 npm run e2e:opencode-v2
+          no_output_timeout: 15m
 
 jobs:
   linux:
@@ -28,7 +32,7 @@ jobs:
       - run: choco install nodejs-lts -y --no-progress
       - run: |
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          node --version; npm ci; npm test; npm run e2e:packaged
+          node --version; npm ci; npm test; npm run e2e:packaged; $env:E2E_PACKED='1'; npm run e2e:opencode-v2
   macos-arm:
     macos:
       xcode: "26.6"
