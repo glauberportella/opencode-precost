@@ -1,6 +1,6 @@
 **English** | [Português (Brasil)](INSTALACAO.pt-BR.md)
 
-# Installation and verification (v0.3.0-dev, private repository)
+# Installation and verification (v0.3.1)
 
 Nothing here calls a paid model or publishes a package. Requirements: Node >= 20, git, access to the repository.
 
@@ -26,7 +26,7 @@ Official client support on Windows (docs read 2026-11-25): Claude Code runs nati
 
 ```
 git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost
-git checkout dev/0.3.0              # until release 0.3.0
+git checkout v0.3.1                  # or stay on main
 npm ci && npm test                    # 71 tests
 ```
 
