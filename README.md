@@ -28,9 +28,9 @@ Image 05 illustrates the block (a model with no price in the table) as a partial
 
 Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
-- **Claude Code (plugin):** `claude --plugin-dir /path/to/opencode-precost` to try it locally. Marketplace install (`/plugin marketplace add <repo>`, `/plugin install precost@precost-marketplace`) will work only after the repository is public. Not published to any marketplace yet.
+- **Claude Code (plugin):** `claude --plugin-dir /path/to/opencode-precost` to try it locally. Marketplace install from this repository (checked on Linux x64 with Claude Code 2.1.332 and a local mock model, no paid call): `claude plugin marketplace add glauberportella/opencode-precost`, then `claude plugin install precost@precost-marketplace`. This is the repository's own marketplace, not the Anthropic directory. It is not listed in any third-party directory.
 - **Claude Code (manual):** copy `adapters/claude-code/settings.example.json` into your Claude settings and fix the path. Keep `"onFailure": "block"`: without it a crashing, missing or hanging hook lets the prompt reach the model.
-- **OpenCode (1.19.6 only):** `npm i opencode-precost @opencode-ai/plugin@1.19.6` (the package is not on npm yet; use `npm pack` from a clone) and create `.opencode/plugins/precost.js`:
+- **OpenCode (1.19.6 only):** `npm i opencode-precost @opencode-ai/plugin@1.19.6` (published on npm: https://www.npmjs.com/package/opencode-precost; the registry install was checked on Linux x64 only) and create `.opencode/plugins/precost.js`:
   ```js
   import { PrecostPlugin } from 'opencode-precost';
   export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });

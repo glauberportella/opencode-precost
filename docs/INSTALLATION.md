@@ -44,12 +44,12 @@ Without `limitUsd` the hook only informs and never blocks. `trustConfiguredModel
 
 ## 3. Claude Code (tested with 2.1.332)
 
-- **Plugin:** `claude --plugin-dir /path/to/opencode-precost` to try it. After the repository is public: `/plugin marketplace add <repo>` and `/plugin install precost@precost-marketplace`. Hooks are in `hooks/hooks.json` with `onFailure: "block"`. Not published to any marketplace yet.
+- **Plugin:** `claude --plugin-dir /path/to/opencode-precost` to try it. From this repository's own marketplace: `claude plugin marketplace add glauberportella/opencode-precost` and `claude plugin install precost@precost-marketplace` (checked on Linux x64 with `scripts/claude-marketplace-e2e.sh`: block, approve, single use, fail closed; Claude Code 2.1.332, local mock model, `-p` mode only). Hooks are in `hooks/hooks.json` with `onFailure: "block"`. Not listed in the Anthropic directory or any third-party directory.
 - **Manual:** copy `adapters/claude-code/settings.example.json` into `~/.claude/settings.json` (or the project's `.claude/settings.json`) and replace `/CAMINHO/opencode-precost` with the clone path. Keep `"onFailure": "block"` on `UserPromptSubmit`; without it a crash, timeout or missing node lets the prompt reach the model.
 
 ## 4. OpenCode (tested with 1.19.6; other versions block)
 
-In the project: `npm i opencode-precost @opencode-ai/plugin@1.19.6` (not on npm yet: run `npm pack` in a clone and install the tarball), then create `.opencode/plugins/precost.js`:
+In the project: `npm i opencode-precost @opencode-ai/plugin@1.19.6` (published: https://www.npmjs.com/package/opencode-precost; the install from the registry was checked on Linux x64 only; macOS arm64 and Windows x64 are covered by the CI tarball run), then create `.opencode/plugins/precost.js`:
 
 ```js
 import { PrecostPlugin } from 'opencode-precost';

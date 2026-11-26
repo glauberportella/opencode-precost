@@ -20,9 +20,9 @@ Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.co
 
 ## Instalar por cliente
 
-- **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; depois de publicado, `/plugin marketplace add <repo>` e `/plugin install precost@precost-marketplace`. Hooks em `hooks/hooks.json` (fail-closed). Plugin ainda NAO publicado em nenhum marketplace.
+- **Claude Code (plugin):** `claude --plugin-dir /caminho/opencode-precost` para testar; marketplace do proprio repositorio: `claude plugin marketplace add glauberportella/opencode-precost` e `claude plugin install precost@precost-marketplace` (verificado em Linux x64 com `scripts/claude-marketplace-e2e.sh`, Claude Code 2.1.332, modelo simulado local, so modo `-p`). Hooks em `hooks/hooks.json` (fail-closed). Nao esta em diretorio da Anthropic nem de terceiros.
 - **Claude Code (manual):** secao 3 abaixo (settings.json).
-- **OpenCode:** `npm i opencode-precost @opencode-ai/plugin@1.19.6` no projeto (pacote ainda nao publicado: use `npm pack` do clone) e o arquivo `.opencode/plugins/precost.js` da secao 4 importando `'opencode-precost'`. So a versao 1.19.6 e aceita; o carregamento apenas por `opencode.json` nao foi verificado.
+- **OpenCode:** `npm i opencode-precost @opencode-ai/plugin@1.19.6` no projeto (publicado em https://www.npmjs.com/package/opencode-precost; instalacao pelo registry verificada so em Linux x64) e o arquivo `.opencode/plugins/precost.js` da secao 4 importando `'opencode-precost'`. So a versao 1.19.6 e aceita; o carregamento apenas por `opencode.json` nao foi verificado.
 - **Primeiro passo em qualquer cliente:** `precost doctor` e depois a tabela de precos: `precost prices` e `precost update-prices --from URL|ARQUIVO` (sem `--from` usa a fonte padrao: a tabela no `main` do repositorio do projeto, ver PRICES.md; so funciona depois que o repo for publico, ate la falha com HTTP 404, mantem a tabela atual e sai com 1).
 
 ## 1. Obter e testar
@@ -71,7 +71,7 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 
 - Verificado: `npm i opencode-precost @opencode-ai/plugin` + `.opencode/plugins/precost.js` importando `'opencode-precost'` carrega o plugin e bloqueia a mensagem (teste com provedor inexistente).
 - NAO verificado: carregar so por `opencode.json` (chave `plugin` com o nome do pacote). Nos testes o plugin nao foi carregado assim. A chave `plugins` e ignorada pelo 1.19.6. Use o shim acima.
-- O pacote ainda nao esta publicado no npm; o teste usou o tarball de `npm pack`.
+- O pacote esta publicado no npm (0.3.2). A instalacao pelo registry foi verificada so em Linux x64; macOS arm64 e Windows x64 foram verificados no CI com o tarball.
 
 ## Falha do hook no plugin Claude Code (verificado em Linux)
 
