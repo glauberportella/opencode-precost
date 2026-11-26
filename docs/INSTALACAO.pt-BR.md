@@ -1,6 +1,6 @@
 [English](INSTALLATION.md) | **Português (Brasil)**
 
-# Instalação e verificação (candidata 0.4.0; publicada: 0.3.2)
+# Instalação e verificação (0.4.0 publicada como `next`; `latest`: 0.3.2)
 
 Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, acesso ao repositório privado.
 
@@ -52,7 +52,7 @@ Instale `@opencode-ai/plugin@1.19.6` onde o OpenCode resolver o plugin se ele pe
 
 ## 4b. OpenCode 2.x (EXPERIMENTAL, 0.4.0; testado so com 2.4.2)
 
-O OpenCode 2.x usa outra API de plugin (`@opencode/plugin`); o plugin V1 acima nao roda nele. No projeto: `npm i opencode-precost` e `.opencode/plugins/precost.js`:
+O OpenCode 2.x usa outra API de plugin (`@opencode/plugin`); o plugin V1 acima nao roda nele. No projeto: `npm i opencode-precost@next` e `.opencode/plugins/precost.js`:
 
 ```js
 import { precostV2 } from 'opencode-precost/opencode-v2';
@@ -82,7 +82,7 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 
 - Verificado: `npm i opencode-precost @opencode-ai/plugin` + `.opencode/plugins/precost.js` importando `'opencode-precost'` carrega o plugin e bloqueia a mensagem (teste com provedor inexistente).
 - NAO verificado: carregar so por `opencode.json` (chave `plugin` com o nome do pacote). Nos testes o plugin nao foi carregado assim. A chave `plugins` e ignorada pelo 1.19.6. Use o shim acima.
-- O pacote esta publicado no npm (0.3.2). A instalacao pelo registry foi verificada so em Linux x64; macOS arm64 e Windows Server 2022 foram verificados no CI com o tarball.
+- O pacote esta publicado no npm (`latest` 0.3.2; `next` 0.4.0). A instalacao pelo registry foi verificada so em Linux x64; macOS arm64 e Windows Server 2022 foram verificados no CI com o tarball.
 
 ## Falha do hook no plugin Claude Code (verificado em Linux)
 

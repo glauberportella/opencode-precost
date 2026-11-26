@@ -4,7 +4,7 @@
 
 Shows an **estimated** cost range *before* a task runs in a coding agent (OpenCode and Claude Code). Optionally asks for explicit approval when the high end of the range goes above a limit you set. No paid calls, no network access at run time.
 
-> Status: version 0.4.0 (candidate, not published yet; the published version on npm is 0.3.2). OpenCode 2.x support is EXPERIMENTAL. The packaged install is checked in CI on Linux x64, macOS arm64 and Windows (Server 2022; architecture printed in the CI log), with fake servers and no paid calls. macOS Intel is not covered (see docs/INSTALLATION.md). Read "Limits" before relying on it.
+> Status: version 0.4.0 is published on npm under the `next` tag (the `latest` tag is still 0.3.2, which has no OpenCode 2.x support). OpenCode 2.x support is EXPERIMENTAL. The packaged install is checked in CI on Linux x64, macOS arm64 and Windows (Server 2022; architecture printed in the CI log), with fake servers and no paid calls. macOS Intel is not covered (see docs/INSTALLATION.md). Read "Limits" before relying on it.
 
 ## What it does
 
@@ -36,7 +36,7 @@ Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/IN
   export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
   ```
   Loading the plugin only through `opencode.json` was not verified.
-- **OpenCode 2.x (EXPERIMENTAL, new in 0.4.0, tested only with 2.4.2):** a separate V2 plugin, because V1 plugins do not run in V2. In `.opencode/plugins/precost.js`: `import { precostV2 } from 'opencode-precost/opencode-v2'; export default precostV2({ limitUsd: 5 });`. It is a gate only: estimate, block above `limitUsd`, `precost approve CODE`. What to expect:
+- **OpenCode 2.x (EXPERIMENTAL, new in 0.4.0, tested only with 2.4.2):** a separate V2 plugin, because V1 plugins do not run in V2. Install with `npm i opencode-precost@next` (the `latest` tag, 0.3.2, has no V2 plugin). In `.opencode/plugins/precost.js`: `import { precostV2 } from 'opencode-precost/opencode-v2'; export default precostV2({ limitUsd: 5 });`. It is a gate only: estimate, block above `limitUsd`, `precost approve CODE`. What to expect:
   - Only OpenCode 2.4.2 is verified; any other version blocks every prompt (fail closed). Do not set `allowUnverifiedVersion` unless you accept that untested risk.
   - When it blocks, the OpenCode 2.4.2 client shows only a generic `UnexpectedStatus: 500`, not the reason and not a preview. Read the reason in a terminal with `precost last` (or in the plugin `log`). Typed `precost ...` commands are intercepted but their text is not shown by the client either.
   - The model is read from the session. If the effective model of a request differs from the estimated one, the request is blocked. Image or inline attachments are not counted: the gate blocks with a "not counted" notice.

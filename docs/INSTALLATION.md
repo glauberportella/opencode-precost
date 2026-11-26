@@ -1,6 +1,6 @@
 **English** | [Português (Brasil)](INSTALACAO.pt-BR.md)
 
-# Installation and verification (v0.4.0 candidate; published: 0.3.2)
+# Installation and verification (v0.4.0 published as `next`; `latest`: 0.3.2)
 
 Nothing here calls a paid model or publishes a package. Requirements: Node >= 20, git, access to the repository.
 
@@ -60,7 +60,7 @@ Verified on Linux with OpenCode 1.19.6: this shim loads the plugin and blocks th
 
 ## 4b. OpenCode 2.x (EXPERIMENTAL, 0.4.0; tested with 2.4.2 only)
 
-OpenCode 2.x uses a different plugin API (`@opencode/plugin`); the V1 plugin above does not run in it. In the project: `npm i opencode-precost`, then `.opencode/plugins/precost.js`:
+OpenCode 2.x uses a different plugin API (`@opencode/plugin`); the V1 plugin above does not run in it. In the project: `npm i opencode-precost@next`, then `.opencode/plugins/precost.js`:
 
 ```js
 import { precostV2 } from 'opencode-precost/opencode-v2';
