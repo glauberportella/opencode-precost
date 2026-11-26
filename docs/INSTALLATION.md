@@ -25,7 +25,7 @@ Official client support on Windows (docs read 2026-11-25): Claude Code runs nati
 ## 1. Get it and test it
 
 ```
-git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost
+git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost
 git checkout dev/0.3.0              # until release 0.3.0
 npm ci && npm test                    # 71 tests
 ```
