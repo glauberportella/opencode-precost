@@ -1,0 +1,46 @@
+version: 2.1
+
+# Free plan: Linux x86 (Docker), Windows Server 2022 and macOS Apple Silicon (m4pro.medium).
+# There is no macOS Intel on CircleCI (deprecated in 2024). Real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake local servers: no paid calls.
+orbs:
+  win: circleci/windows@5.0
+
+commands:
+  checks:
+    steps:
+      - run: node --version
+      - run: npm ci
+      - run: npm test
+      - run: npm run e2e:packaged
+
+jobs:
+  linux:
+    docker:
+      - image: cimg/node:22.11
+    resource_class: small
+    steps:
+      - checkout
+      - checks
+  windows:
+    executor: win/server-2022
+    steps:
+      - checkout
+      - run: choco install nodejs-lts -y --no-progress
+      - run: |
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          node --version; npm ci; npm test; npm run e2e:packaged
+  macos-arm:
+    macos:
+      xcode: "26.3.0"
+    resource_class: m4pro.medium
+    steps:
+      - checkout
+      - run: brew install node@22 && echo 'export PATH="/opt/homebrew/opt/node@22/bin:$PATH"' >> "$BASH_ENV"
+      - checks
+
+workflows:
+  packaged-matrix:
+    jobs:
+      - linux
+      - windows
+      - macos-arm

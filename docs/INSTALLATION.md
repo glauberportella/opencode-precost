@@ -1,12 +1,14 @@
 **English** | [Português (Brasil)](INSTALACAO.pt-BR.md)
 
-# Installation and verification (v0.3.1)
+# Installation and verification (v0.3.2)
 
 Nothing here calls a paid model or publishes a package. Requirements: Node >= 20, git, access to the repository.
 
 ## Validation matrix
 
 What was actually executed (GitHub-hosted runners and local runs). Linux is not validation of macOS or Windows.
+
+Status of 0.3.2 (the packaged install, with its npm dependencies): run locally on Linux x64 only (real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake servers, no paid calls). The table below is for 0.3.0 and does not cover 0.3.2. macOS Apple Silicon and Windows runs of the packaged install are pending; macOS Intel has no free CI that we found.
 
 | Check (CI run #8 at 21bec84: 70 unit tests; run #9 at 6e57c76: 71) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
 |---|---|---|---|---|
@@ -26,7 +28,7 @@ Official client support on Windows (docs read 2026-11-25): Claude Code runs nati
 
 ```
 git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost
-git checkout v0.3.1                  # or stay on main
+git checkout v0.3.2                  # or stay on main
 npm ci && npm test                    # 71 tests
 ```
 

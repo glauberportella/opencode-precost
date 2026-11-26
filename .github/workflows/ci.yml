@@ -52,17 +52,9 @@ jobs:
       matrix: { os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest] }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
-    defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: |
-          npm pack --silent
-          mkdir "$RUNNER_TEMP/inst" && cd "$RUNNER_TEMP/inst"
-          npm init -y >/dev/null
-          npm install --silent "$GITHUB_WORKSPACE"/opencode-precost-*.tgz
-          test -d node_modules/@opencode-ai/plugin
-          cp -r "$GITHUB_WORKSPACE/scripts" node_modules/opencode-precost/scripts
-          cd node_modules/opencode-precost
-          node scripts/e2e-native.mjs
+      - run: npm ci
+      - run: npm run e2e:packaged

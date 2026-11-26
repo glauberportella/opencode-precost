@@ -1,6 +1,6 @@
 [English](INSTALLATION.md) | **Português (Brasil)**
 
-# Instalação e verificação (v0.3.1)
+# Instalação e verificação (v0.3.2)
 
 Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, acesso ao repositório privado.
 
@@ -28,7 +28,7 @@ Linux nao e validacao de macOS/Windows. Caminhos de dados por plataforma (`~/.co
 ## 1. Obter e testar
 ```
 git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost
-git checkout v0.3.1                   # ou fique no main
+git checkout v0.3.2                   # ou fique no main
 npm ci && npm test                     # 71 testes
 ```
 Testes reais com software de terceiros contra servidores FALSOS locais (sem gasto, baixam versões fixas via npx): `npm run e2e:claude`, `e2e:claude-tui`, `e2e:claude-failure`, `e2e:opencode`, `e2e:opencode-ledger`, `e2e:opencode-tui`.
