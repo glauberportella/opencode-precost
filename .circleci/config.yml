@@ -35,7 +35,12 @@ jobs:
     resource_class: m4pro.medium
     steps:
       - checkout
-      - run: brew install node@22 && echo 'export PATH="/opt/homebrew/opt/node@22/bin:$PATH"' >> "$BASH_ENV"
+      - run:
+          name: Install Node 22 (official arm64 tarball)
+          command: |
+            curl -fsSL https://nodejs.org/dist/v22.12.0/node-v22.12.0-darwin-arm64.tar.gz -o /tmp/node.tgz
+            mkdir -p "$HOME/node" && tar -xzf /tmp/node.tgz -C "$HOME/node" --strip-components=1
+            echo 'export PATH="$HOME/node/bin:$PATH"' >> "$BASH_ENV"
       - checks
 
 workflows:
