@@ -4,7 +4,7 @@
 
 Shows an **estimated** cost range *before* a task runs in a coding agent (OpenCode and Claude Code). Optionally asks for explicit approval when the high end of the range goes above a limit you set. No paid calls, no network access at run time.
 
-> Status: version 0.3.2, early release. Packaged-install checks on macOS and Windows are still pending (see docs/INSTALLATION.md). Read "Limits" before relying on it.
+> Status: version 0.3.2, early release. The packaged install is checked in CI on Linux x64, macOS arm64 and Windows x64, with fake servers and no paid calls. macOS Intel is not covered (see docs/INSTALLATION.md). Read "Limits" before relying on it.
 
 ## What it does
 

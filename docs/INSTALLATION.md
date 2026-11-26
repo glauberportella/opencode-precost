@@ -8,7 +8,7 @@ Nothing here calls a paid model or publishes a package. Requirements: Node >= 20
 
 What was actually executed (GitHub-hosted runners and local runs). Linux is not validation of macOS or Windows.
 
-Status of 0.3.2 (the packaged install, with its npm dependencies): run locally on Linux x64 only (real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake servers, no paid calls). The table below is for 0.3.0 and does not cover 0.3.2. macOS Apple Silicon and Windows runs of the packaged install are pending; macOS Intel has no free CI that we found.
+Status of 0.3.2 (the packaged install, with its npm dependencies): in CircleCI (Free plan) the packed tarball is installed clean and the native E2E runs from the installed copy on Linux x64, macOS arm64 (m4pro, Xcode 26.6 image, Node 22.12.0) and Windows x64 (Node from Chocolatey LTS). It uses real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake servers, no paid calls. macOS Intel is NOT covered (CircleCI no longer offers it). The table below is for 0.3.0 and does not cover 0.3.2.
 
 | Check (CI run #8 at 21bec84: 70 unit tests; run #9 at 6e57c76: 71) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
 |---|---|---|---|---|
