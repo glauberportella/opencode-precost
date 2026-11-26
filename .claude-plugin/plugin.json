@@ -1,6 +1,6 @@
 {
   "name": "precost",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Cost range estimate before each prompt and explicit approval above a USD limit. An estimate, not a spending cap.",
   "author": {
     "name": "glauberportella"

@@ -1,6 +1,6 @@
 {
   "name": "opencode-precost",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Cost range preview and approval gate before a task runs in coding agents (OpenCode, Claude Code). An estimate, not a spending cap.",
   "type": "module",
   "bin": {
@@ -22,9 +22,6 @@
     "node": ">=20"
   },
   "license": "MIT",
-  "devDependencies": {
-    "@opencode-ai/plugin": "1.19.6"
-  },
   "main": "adapters/opencode/index.js",
   "exports": {
     ".": "./adapters/opencode/index.js",
@@ -54,12 +51,7 @@
     "type": "git",
     "url": "git+https://github.com/glauberportella/opencode-precost.git"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@opencode-ai/plugin": "1.19.6"
-  },
-  "peerDependenciesMeta": {
-    "@opencode-ai/plugin": {
-      "optional": true
-    }
   }
 }
