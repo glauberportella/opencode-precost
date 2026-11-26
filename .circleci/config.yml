@@ -9,6 +9,7 @@ commands:
   checks:
     steps:
       - run: node --version
+      - run: node -p "'runner ' + process.platform + ' ' + process.arch"
       - run: npm ci
       - run: npm test
       - run: npm run e2e:packaged
@@ -32,7 +33,7 @@ jobs:
       - run: choco install nodejs-lts -y --no-progress
       - run: |
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          node --version; npm ci; npm test; npm run e2e:packaged; $env:E2E_PACKED='1'; npm run e2e:opencode-v2
+          node --version; node -p "'runner ' + process.platform + ' ' + process.arch"; $env:PROCESSOR_ARCHITECTURE; npm ci; npm test; npm run e2e:packaged; $env:E2E_PACKED='1'; npm run e2e:opencode-v2
   macos-arm:
     macos:
       xcode: "26.6"

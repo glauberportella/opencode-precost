@@ -1,6 +1,6 @@
 **English** | [Português (Brasil)](INSTALACAO.pt-BR.md)
 
-# Installation and verification (v0.3.2)
+# Installation and verification (v0.4.0 candidate; published: 0.3.2)
 
 Nothing here calls a paid model or publishes a package. Requirements: Node >= 20, git, access to the repository.
 
@@ -8,7 +8,7 @@ Nothing here calls a paid model or publishes a package. Requirements: Node >= 20
 
 What was actually executed (GitHub-hosted runners and local runs). Linux is not validation of macOS or Windows.
 
-Status of 0.3.2 (the packaged install, with its npm dependencies): in CircleCI (Free plan) the packed tarball is installed clean and the native E2E runs from the installed copy on Linux x64, macOS arm64 (m4pro, Xcode 26.6 image, Node 22.12.0) and Windows x64 (Node from Chocolatey LTS). It uses real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake servers, no paid calls. macOS Intel is NOT covered (CircleCI no longer offers it). The table below is for 0.3.0 and does not cover 0.3.2.
+Status of 0.3.2 (the packaged install, with its npm dependencies): in CircleCI (Free plan) the packed tarball is installed clean and the native E2E runs from the installed copy on Linux x64, macOS arm64 (m4pro, Xcode 26.6 image, Node 22.12.0) and Windows Server 2022 (Node from Chocolatey LTS; architecture not printed in the 0.3.2 runs, printed from 0.4.0 on). It uses real Claude Code 2.1.332 and opencode-ai 1.19.6 against fake servers, no paid calls. macOS Intel is NOT covered (CircleCI no longer offers it). The table below is for 0.3.0 and does not cover 0.3.2.
 
 | Check (CI run #8 at 21bec84: 70 unit tests; run #9 at 6e57c76: 71) | Linux x64 | macOS arm64 (macos-26) | macOS Intel x64 (macos-15-intel) | Windows x64 |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ Without `limitUsd` the hook only informs and never blocks. `trustConfiguredModel
 
 ## 4. OpenCode (tested with 1.19.6; other versions block)
 
-In the project: `npm i opencode-precost @opencode-ai/plugin@1.19.6` (published: https://www.npmjs.com/package/opencode-precost; the install from the registry was checked on Linux x64 only; macOS arm64 and Windows x64 are covered by the CI tarball run), then create `.opencode/plugins/precost.js`:
+In the project: `npm i opencode-precost @opencode-ai/plugin@1.19.6` (published: https://www.npmjs.com/package/opencode-precost; the install from the registry was checked on Linux x64 only; macOS arm64 and Windows Server 2022 are covered by the CI tarball run), then create `.opencode/plugins/precost.js`:
 
 ```js
 import { PrecostPlugin } from 'opencode-precost';
@@ -57,6 +57,17 @@ export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
 ```
 
 Verified on Linux with OpenCode 1.19.6: this shim loads the plugin and blocks the message. Not verified: loading it only through `opencode.json` (the `plugin` key did not load it in tests; the `plugins` key is ignored by 1.19.6). Use the shim.
+
+## 4b. OpenCode 2.x (EXPERIMENTAL, 0.4.0; tested with 2.4.2 only)
+
+OpenCode 2.x uses a different plugin API (`@opencode/plugin`); the V1 plugin above does not run in it. In the project: `npm i opencode-precost`, then `.opencode/plugins/precost.js`:
+
+```js
+import { precostV2 } from 'opencode-precost/opencode-v2';
+export default precostV2({ limitUsd: 5 });
+```
+
+Limits, in plain words: only 2.4.2 is verified and other versions block every prompt; the client shows only `UnexpectedStatus: 500` when it blocks (read the reason with `precost last` in a terminal); a request on a different model than the estimated one is blocked; image/inline attachments are not counted and are blocked with a notice; `sessionLimitUsd` blocks while configured (not supported); title, compaction and generate requests are not gated; the ledger and history are not ported; blocking by throw is not a documented rejection API; the TUI and `opencode.json` loading were not tested. CI (Linux x64, macOS arm64, Windows Server 2022; the runner architecture is printed in the job log) runs the packed tarball with the real `@opencode/cli` 2.4.2 and a fake model. Never a paid model.
 
 ## 5. Check the install (no paid call)
 

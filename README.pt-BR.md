@@ -4,6 +4,8 @@
 
 Mostra uma ESTIMATIVA de faixa de custo ANTES de executar uma tarefa em agentes de codigo (OpenCode e Claude Code), e opcionalmente pede aprovacao explicita quando a faixa alta passa de um limite. Privado, sem chamadas pagas. Versao de desenvolvimento 0.3.0 (branch dev/0.3.0), com limites: ver `docs/INSTALACAO.pt-BR.md`, "Limites" e `docs/CAPACIDADES.md`.
 
+> Candidata 0.4.0 (nao publicada; no npm esta a 0.3.2): suporte EXPERIMENTAL ao OpenCode 2.x (so 2.4.2). Veja `docs/INSTALACAO.pt-BR.md`, secao 4b: cliente mostra so erro 500 ao bloquear (use `precost last`), titulo/compactacao fora do gate, `sessionLimitUsd` bloqueia, anexos de imagem nao contados.
+
 ## Imagens (execucao real, Linux)
 Renderizacoes do texto de saida do terminal (nao sao screenshots de interface), geradas a partir de saidas reais; as legendas nas imagens estao em ingles e as mensagens da ferramenta ainda estao em portugues. Onde ha modelo, ele e um servidor SIMULADO local (sem custo, sem credencial). Nada abaixo foi executado em macOS ou Windows.
 

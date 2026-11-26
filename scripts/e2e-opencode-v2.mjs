@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const R = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WIN = process.platform === 'win32';
 let FAIL = 0;
+console.log(`runner: platform=${process.platform} arch=${process.arch} node=${process.version} os=${(await import('node:os')).release()}`);
 const chk = (name, got, want) => { const ok = String(got) === String(want); console.log(`${ok ? 'ok  ' : 'FALHOU'} ${name}${ok ? '' : ` (esperado ${want}, obtido ${got})`}`); if (!ok) FAIL = 1; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function killTree(child) { try { if (WIN) spawnSync(`taskkill /pid ${child.pid} /T /F`, { shell: true }); else process.kill(-child.pid, 'SIGKILL'); } catch {} }

@@ -1,6 +1,6 @@
 # Distribution (maintainer notes)
 
-Status: `opencode-precost@0.3.2` is published on npm (https://www.npmjs.com/package/opencode-precost). The repository's own Claude Code marketplace works from GitHub. Nothing is submitted to the Anthropic directory or an OpenCode list yet.
+Status: `opencode-precost@0.3.2` is published on npm; 0.4.0 (adds EXPERIMENTAL OpenCode 2.x support) is a candidate branch, NOT published (https://www.npmjs.com/package/opencode-precost). The repository's own Claude Code marketplace works from GitHub. Nothing is submitted to the Anthropic directory or an OpenCode list yet.
 
 ## Claude Code: own marketplace (this repository)
 

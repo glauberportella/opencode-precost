@@ -1,6 +1,6 @@
 [English](INSTALLATION.md) | **Português (Brasil)**
 
-# Instalação e verificação (v0.3.2)
+# Instalação e verificação (candidata 0.4.0; publicada: 0.3.2)
 
 Nada aqui chama modelo pago nem publica pacote. Requisitos: Node >= 20, git, acesso ao repositório privado.
 
@@ -50,6 +50,17 @@ export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
 ```
 Instale `@opencode-ai/plugin@1.19.6` onde o OpenCode resolver o plugin se ele pedir (ver `package.json`).
 
+## 4b. OpenCode 2.x (EXPERIMENTAL, 0.4.0; testado so com 2.4.2)
+
+O OpenCode 2.x usa outra API de plugin (`@opencode/plugin`); o plugin V1 acima nao roda nele. No projeto: `npm i opencode-precost` e `.opencode/plugins/precost.js`:
+
+```js
+import { precostV2 } from 'opencode-precost/opencode-v2';
+export default precostV2({ limitUsd: 5 });
+```
+
+Limites: so a 2.4.2 e verificada e outras versoes bloqueiam todo prompt; ao bloquear, o cliente mostra so `UnexpectedStatus: 500` (leia o motivo com `precost last` no terminal); pedido em modelo diferente do estimado e bloqueado; anexos de imagem/inline nao sao contados e bloqueiam com aviso; `sessionLimitUsd` bloqueia enquanto estiver configurado (nao suportado); pedidos de titulo, compactacao e generate NAO passam pelo gate; ledger e historico nao foram portados; bloquear por throw nao e uma API de rejeicao documentada; TUI e carga por `opencode.json` nao testadas. O CI (Linux x64, macOS arm64, Windows Server 2022; a arquitetura do runner aparece no log do job) roda o tarball com o `@opencode/cli` 2.4.2 real e modelo falso. Nunca modelo pago.
+
 ## 5. Verificar a instalação (sem chamada paga)
 ```
 node bin/precost.js doctor [--project DIR] [--claude-settings ARQUIVO]
@@ -71,7 +82,7 @@ O `doctor` confere config, preços, hook/plugin nos arquivos, `onFailure`, rastr
 
 - Verificado: `npm i opencode-precost @opencode-ai/plugin` + `.opencode/plugins/precost.js` importando `'opencode-precost'` carrega o plugin e bloqueia a mensagem (teste com provedor inexistente).
 - NAO verificado: carregar so por `opencode.json` (chave `plugin` com o nome do pacote). Nos testes o plugin nao foi carregado assim. A chave `plugins` e ignorada pelo 1.19.6. Use o shim acima.
-- O pacote esta publicado no npm (0.3.2). A instalacao pelo registry foi verificada so em Linux x64; macOS arm64 e Windows x64 foram verificados no CI com o tarball.
+- O pacote esta publicado no npm (0.3.2). A instalacao pelo registry foi verificada so em Linux x64; macOS arm64 e Windows Server 2022 foram verificados no CI com o tarball.
 
 ## Falha do hook no plugin Claude Code (verificado em Linux)
 

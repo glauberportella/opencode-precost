@@ -1,6 +1,6 @@
 {
   "name": "opencode-precost",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Cost range preview and approval gate before a task runs in coding agents (OpenCode, Claude Code). An estimate, not a spending cap.",
   "type": "module",
   "bin": {

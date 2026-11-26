@@ -4,7 +4,7 @@
 
 Shows an **estimated** cost range *before* a task runs in a coding agent (OpenCode and Claude Code). Optionally asks for explicit approval when the high end of the range goes above a limit you set. No paid calls, no network access at run time.
 
-> Status: version 0.3.2, early release. The packaged install is checked in CI on Linux x64, macOS arm64 and Windows x64, with fake servers and no paid calls. macOS Intel is not covered (see docs/INSTALLATION.md). Read "Limits" before relying on it.
+> Status: version 0.4.0 (candidate, not published yet; the published version on npm is 0.3.2). OpenCode 2.x support is EXPERIMENTAL. The packaged install is checked in CI on Linux x64, macOS arm64 and Windows (Server 2022; architecture printed in the CI log), with fake servers and no paid calls. macOS Intel is not covered (see docs/INSTALLATION.md). Read "Limits" before relying on it.
 
 ## What it does
 
@@ -36,7 +36,14 @@ Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/IN
   export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
   ```
   Loading the plugin only through `opencode.json` was not verified.
-- **OpenCode 2.x (branch `feat/opencode-v2`, not released, not in the npm package yet):** a separate V2 plugin (`adapters/opencode-v2`), because V1 plugins do not run in V2. In `.opencode/plugins/precost.js`: `import { precostV2 } from 'opencode-precost/opencode-v2'; export default precostV2({ limitUsd: 5 });`. Gate only (estimate, block above `limitUsd`, `precost approve CODE`). Fail-closed cases: unverified OpenCode version (only 2.4.2), a request whose effective model differs from the one estimated, attachments that are not local files (images, inline data: not counted), and `sessionLimitUsd` (not ported, so it blocks instead of being ignored). The per-session spend ledger is not ported. Title/compaction side requests are not gated. Verified on Linux x64 with `@opencode/cli` 2.4.2 against a fake local model (`npm run e2e:opencode-v2`, `E2E_PACKED=1` for a clean tarball). OpenCode shows only a generic error when it blocks: read the reason with `precost last` in a terminal.
+- **OpenCode 2.x (EXPERIMENTAL, new in 0.4.0, tested only with 2.4.2):** a separate V2 plugin, because V1 plugins do not run in V2. In `.opencode/plugins/precost.js`: `import { precostV2 } from 'opencode-precost/opencode-v2'; export default precostV2({ limitUsd: 5 });`. It is a gate only: estimate, block above `limitUsd`, `precost approve CODE`. What to expect:
+  - Only OpenCode 2.4.2 is verified; any other version blocks every prompt (fail closed). Do not set `allowUnverifiedVersion` unless you accept that untested risk.
+  - When it blocks, the OpenCode 2.4.2 client shows only a generic `UnexpectedStatus: 500`, not the reason and not a preview. Read the reason in a terminal with `precost last` (or in the plugin `log`). Typed `precost ...` commands are intercepted but their text is not shown by the client either.
+  - The model is read from the session. If the effective model of a request differs from the estimated one, the request is blocked. Image or inline attachments are not counted: the gate blocks with a "not counted" notice.
+  - `sessionLimitUsd` is NOT supported on V2 and blocks every prompt while it is configured (so it is never ignored silently). The spend ledger and history are not ported.
+  - Auxiliary requests (session title, compaction, generate) do NOT go through the gate and are not estimated.
+  - Blocking by throwing in the prompt hook is not a documented rejection API in OpenCode 2.x. The TUI and loading through `opencode.json` were not tested.
+  - Checked in CI (Linux x64, macOS arm64, Windows) with the packed tarball and the real `@opencode/cli` 2.4.2 against a fake local model (`E2E_PACKED=1 npm run e2e:opencode-v2`). Never against a paid model. macOS Intel is not covered.
 - **Config** (`~/.config/precost/config.json`, Windows `%APPDATA%\precost\config.json`): `{"model":"claude-sonnet-5.5","limitUsd":5}`.
 - **Check the install:** `node bin/precost.js doctor`. It cannot prove the client loaded the hook in your session. In a real session type `precost last` first: if a model answers, the hook is not loaded.
 
