@@ -31,7 +31,7 @@ jobs:
           node --version; npm ci; npm test; npm run e2e:packaged
   macos-arm:
     macos:
-      xcode: "26.3.0"
+      xcode: "26.6"
     resource_class: m4pro.medium
     steps:
       - checkout
