@@ -6,7 +6,7 @@ Recorte de prova de conceito local. Nada aqui chama modelo pago. Saidas reais ca
 
 ## Passos minimos
 ```
-git clone git@github.com:jarbas-melo/opencode-precost.git && cd opencode-precost   # repo privado
+git clone git@github.com:glauberportella/opencode-precost.git && cd opencode-precost   # repo privado
 node --version                       # precisa de Node >= 20
 node bin/precost.js estimate "Adicionar paginacao na listagem de pedidos e escrever testes" \
   --model gemini-3.5-flash --model claude-sonnet-5.5 --model gemini-4-neon
