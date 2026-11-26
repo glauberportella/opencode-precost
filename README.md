@@ -36,6 +36,7 @@ Details, prerequisites and the validation matrix: [docs/INSTALLATION.md](docs/IN
   export const P = async (input) => PrecostPlugin(input, { limitUsd: 5 });
   ```
   Loading the plugin only through `opencode.json` was not verified.
+- **OpenCode 2.x (branch `feat/opencode-v2`, not released, not in the npm package yet):** a separate V2 plugin (`adapters/opencode-v2`), because V1 plugins do not run in V2. In `.opencode/plugins/precost.js`: `import { precostV2 } from 'opencode-precost/opencode-v2'; export default precostV2({ limitUsd: 5 });`. Gate only (estimate, block above `limitUsd`, `precost approve CODE`); the per-session spend ledger and `sessionLimitUsd` are not ported. Verified on Linux x64 with `@opencode/cli` 2.4.2 against a fake local model (`npm run e2e:opencode-v2`); other versions fail closed. OpenCode shows only a generic error when it blocks: read the reason with `precost last` in a terminal.
 - **Config** (`~/.config/precost/config.json`, Windows `%APPDATA%\precost\config.json`): `{"model":"claude-sonnet-5.5","limitUsd":5}`.
 - **Check the install:** `node bin/precost.js doctor`. It cannot prove the client loaded the hook in your session. In a real session type `precost last` first: if a model answers, the hook is not loaded.
 
